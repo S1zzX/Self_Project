@@ -271,8 +271,8 @@ export default function UserProfile({ user, onUserChange }) {
       <div 
         className="relative rounded-2xl p-12 text-white mb-8 text-center overflow-hidden"
         style={{
-          background: '#9BADBF',
-          boxShadow: '0 8px 32px rgba(39, 55, 77, 0.25)'
+          background: 'linear-gradient(135deg, #2563eb 0%, #8b5cf6 100%)',
+          boxShadow: '0 10px 40px rgba(37,99,235,0.12)'
         }}
       >
         {/* Overlay */}
@@ -289,14 +289,14 @@ export default function UserProfile({ user, onUserChange }) {
             style={{
               background: user?.profileImage 
                 ? `url(${getProfileImageUrl(user.profileImage)})` 
-                : '#9BADBF',
+                : 'linear-gradient(135deg,#2563eb,#8b5cf6)',
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              color: '#9BADBF',
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
+              color: '#ffffff',
+              boxShadow: '0 10px 30px rgba(37,99,235,0.08)',
               borderWidth: '4px',
               borderStyle: 'solid',
-              borderColor: 'rgba(255, 255, 255, 0.3)'
+              borderColor: 'rgba(255, 255, 255, 0.18)'
             }}
           >
             {!user?.profileImage && (user?.name?.charAt(0).toUpperCase() || 'U')}
@@ -315,7 +315,7 @@ export default function UserProfile({ user, onUserChange }) {
             
             <label 
               htmlFor="profile-image-upload" 
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer transition-all duration-300 bg-white/95 text-[#9BADBF] hover:bg-white hover:-translate-y-0.5 shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer transition-all duration-300 bg-white/95 text-[#2563eb] hover:bg-white hover:-translate-y-0.5 shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <Camera size={18} />
               {user?.profileImage ? 'Change' : 'Upload'}
@@ -334,22 +334,22 @@ export default function UserProfile({ user, onUserChange }) {
           </div>
         </div>
 
-        <h1 className="relative z-10 text-3xl font-bold mb-2 drop-shadow-md">
+        <h1 className="relative z-10 text-3xl font-bold mb-2 drop-shadow-md text-white">
           {user?.name || 'User'}
         </h1>
-        <p className="relative z-10 opacity-90 text-base mb-3">
+        <p className="relative z-10 opacity-90 text-base mb-3 text-white/90">
           {user?.email || 'user@example.com'}
         </p>
         <span 
           className="relative z-10 inline-block px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-wide border"
           style={{
             background: user?.userType === 'admin' 
-              ? 'rgba(255, 255, 255, 0.25)'
-              : 'rgba(255, 255, 255, 0.2)',
+              ? 'rgba(255, 255, 255, 0.14)'
+              : 'rgba(255, 255, 255, 0.06)',
             borderWidth: '1px',
             borderStyle: 'solid',
-            borderColor: 'rgba(255, 255, 255, 0.3)',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)'
+            borderColor: 'rgba(255, 255, 255, 0.12)',
+            boxShadow: '0 4px 16px rgba(37,99,235,0.06)'
           }}
         >
           {user?.userType?.toUpperCase() || 'USER'}
@@ -359,23 +359,23 @@ export default function UserProfile({ user, onUserChange }) {
       {/* Sections */}
       <div className="flex flex-col gap-6">
         {/* Account Information */}
-        <div className="bg-white border-2 border-[#9BADBF]/15 rounded-2xl p-8 shadow-md transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
-          <div className="flex items-center gap-3 text-xl font-bold text-[#9BADBF] mb-7 pb-4 border-b-2 border-[#9BADBF]/20">
+        <div className="bg-white border-2 border-[#e2e8f0] rounded-2xl p-8 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
+          <div className="flex items-center gap-3 text-xl font-bold text-[#2563eb] mb-7 pb-4 border-b-2 border-[#e2e8f0]">
             <UserIcon size={20} />
             Account Information
           </div>
 
           <div className="mb-6">
-            <label className="block font-semibold text-[#9BADBF] mb-2 text-sm uppercase tracking-wide">
+            <label className="block font-semibold text-[#1e293b] mb-2 text-sm uppercase tracking-wide">
               Full Name
             </label>
             <div className="relative flex items-center w-full">
-              <UserIcon size={18} className="absolute left-3.5 text-[#9BADBF] pointer-events-none" style={{ paddingTop: '11px' }} />
+              <UserIcon size={18} className="absolute left-3.5 text-[#64748b] pointer-events-none" style={{ paddingTop: '11px' }} />
               <input
                 className={`w-full py-3.5 px-12 border-2 rounded-lg text-base transition-all duration-300 bg-white ${
                   accountErrors.name 
                     ? 'border-red-600 shadow-[0_0_0_4px_rgba(220,38,38,0.1)]' 
-                    : 'border-gray-200 focus:border-[#9BADBF] focus:shadow-[0_0_0_4px_rgba(82,109,130,0.1)]'
+                    : 'border-[#e2e8f0] focus:border-[#2563eb] focus:shadow-[0_0_0_8px_rgba(37,99,235,0.06)]'
                 } focus:outline-none`}
                 type="text"
                 value={accountData.name}
@@ -394,16 +394,16 @@ export default function UserProfile({ user, onUserChange }) {
           </div>
 
           <div className="mb-6">
-            <label className="block font-semibold text-[#9BADBF] mb-2 text-sm uppercase tracking-wide">
+            <label className="block font-semibold text-[#1e293b] mb-2 text-sm uppercase tracking-wide">
               Email Address
             </label>
             <div className="relative flex items-center w-full">
-              <Mail size={18} className="absolute left-3.5 text-[#9BADBF] pointer-events-none" style={{ paddingTop: '11px' }} />
+              <Mail size={18} className="absolute left-3.5 text-[#64748b] pointer-events-none" style={{ paddingTop: '11px' }} />
               <input
                 className={`w-full py-3.5 px-12 border-2 rounded-lg text-base transition-all duration-300 bg-white ${
                   accountErrors.email 
                     ? 'border-red-600 shadow-[0_0_0_4px_rgba(220,38,38,0.1)]' 
-                    : 'border-gray-200 focus:border-[#9BADBF] focus:shadow-[0_0_0_4px_rgba(82,109,130,0.1)]'
+                    : 'border-[#e2e8f0] focus:border-[#2563eb] focus:shadow-[0_0_0_8px_rgba(37,99,235,0.06)]'
                 } focus:outline-none`}
                 type="email"
                 value={accountData.email}
@@ -432,9 +432,9 @@ export default function UserProfile({ user, onUserChange }) {
             </div>
           )}
 
-          <div className="flex gap-3 justify-end mt-7 pt-6 border-t-2 border-[#9BADBF]/10">
+          <div className="flex gap-3 justify-end mt-7 pt-6 border-t-2 border-[#e2e8f0]">
             <button 
-              className="px-7 py-3.5 rounded-lg text-base font-semibold transition-all duration-300 bg-slate-200/50 text-slate-600 border-2 border-slate-200/80 hover:bg-slate-200/80 hover:border-[#9BADBF] hover:text-[#9BADBF] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0"
+              className="px-7 py-3.5 rounded-lg text-base font-semibold transition-all duration-300 bg-slate-200/50 text-slate-600 border-2 border-slate-200/80 hover:bg-slate-200/80 hover:border-[#2563eb] hover:text-[#2563eb] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0"
               type="button" 
               onClick={() => { 
                 setAccountData({ name: user?.name || '', email: user?.email || ''}); 
@@ -446,18 +446,8 @@ export default function UserProfile({ user, onUserChange }) {
             <button 
               className="flex items-center gap-2 px-7 py-3.5 rounded-lg text-base font-semibold text-white transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none hover:-translate-y-0.5 active:translate-y-0"
               style={{
-                background: '#9BADBF',
-                boxShadow: '0 4px 12px rgba(82, 109, 130, 0.3)'
-              }}
-              onMouseEnter={(e) => {
-                if (!isLoading) {
-                  e.currentTarget.style.background = '#1e2a3e';
-                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(82, 109, 130, 0.4)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#9BADBF';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(82, 109, 130, 0.3)';
+                background: 'linear-gradient(135deg,#2563eb,#8b5cf6)',
+                boxShadow: '0 6px 18px rgba(37,99,235,0.16)'
               }}
               type="button" 
               disabled={isLoading} 
@@ -470,23 +460,23 @@ export default function UserProfile({ user, onUserChange }) {
         </div>
 
         {/* Change Password */}
-        <div className="bg-white border-2 border-[#9BADBF]/15 rounded-2xl p-8 shadow-md transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
-          <div className="flex items-center gap-3 text-xl font-bold text-[#9BADBF] mb-7 pb-4 border-b-2 border-[#9BADBF]/20">
+        <div className="bg-white border-2 border-[#e2e8f0] rounded-2xl p-8 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
+          <div className="flex items-center gap-3 text-xl font-bold text-[#2563eb] mb-7 pb-4 border-b-2 border-[#e2e8f0]">
             <Lock size={20} />
             Change Password
           </div>
 
           <div className="mb-6">
-            <label className="block font-semibold text-[#9BADBF] mb-2 text-sm uppercase tracking-wide">
+            <label className="block font-semibold text-[#1e293b] mb-2 text-sm uppercase tracking-wide">
               Current Password
             </label>
             <div className="relative flex items-center w-full">
-              <Lock size={18} className="absolute left-3.5 text-[#9BADBF] pointer-events-none" style={{ paddingTop: '11px' }} />
+              <Lock size={18} className="absolute left-3.5 text-[#64748b] pointer-events-none" style={{ paddingTop: '11px' }} />
               <input
                 className={`w-full py-3.5 px-12 border-2 rounded-lg text-base transition-all duration-300 bg-white ${
                   passwordErrors.currentPassword 
                     ? 'border-red-600 shadow-[0_0_0_4px_rgba(220,38,38,0.1)]' 
-                    : 'border-gray-200 focus:border-[#9BADBF] focus:shadow-[0_0_0_4px_rgba(82,109,130,0.1)]'
+                    : 'border-[#e2e8f0] focus:border-[#2563eb] focus:shadow-[0_0_0_8px_rgba(37,99,235,0.06)]'
                 } focus:outline-none`}
                 type={showCurrentPassword ? 'text' : 'password'}
                 value={passwordData.currentPassword}
@@ -498,7 +488,7 @@ export default function UserProfile({ user, onUserChange }) {
               />
               <button 
                 type="button" 
-                className="absolute right-3.5 bg-transparent border-none text-[#9BADBF] cursor-pointer p-1.5 rounded-md transition-all duration-300 flex items-center justify-center w-8 h-8 hover:text-[#9BADBF] hover:bg-[#9BADBF]/10"
+                className="absolute right-3.5 bg-transparent border-none text-[#2563eb] cursor-pointer p-1.5 rounded-md transition-all duration-300 flex items-center justify-center w-8 h-8 hover:text-[#2563eb] hover:bg-[#2563eb]/10"
                 style={{ marginTop: '10px' }}
                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
               >
@@ -513,16 +503,16 @@ export default function UserProfile({ user, onUserChange }) {
           </div>
 
           <div className="mb-6">
-            <label className="block font-semibold text-[#9BADBF] mb-2 text-sm uppercase tracking-wide">
+            <label className="block font-semibold text-[#1e293b] mb-2 text-sm uppercase tracking-wide">
               New Password
             </label>
             <div className="relative flex items-center w-full">
-              <Lock size={18} className="absolute left-3.5 text-[#9BADBF] pointer-events-none" style={{ paddingTop: '11px' }} />
+              <Lock size={18} className="absolute left-3.5 text-[#64748b] pointer-events-none" style={{ paddingTop: '11px' }} />
               <input
                 className={`w-full py-3.5 px-12 border-2 rounded-lg text-base transition-all duration-300 bg-white ${
                   passwordErrors.newPassword 
                     ? 'border-red-600 shadow-[0_0_0_4px_rgba(220,38,38,0.1)]' 
-                    : 'border-gray-200 focus:border-[#9BADBF] focus:shadow-[0_0_0_4px_rgba(82,109,130,0.1)]'
+                    : 'border-[#e2e8f0] focus:border-[#2563eb] focus:shadow-[0_0_0_8px_rgba(37,99,235,0.06)]'
                 } focus:outline-none`}
                 type={showNewPassword ? 'text' : 'password'}
                 value={passwordData.newPassword}
@@ -534,7 +524,7 @@ export default function UserProfile({ user, onUserChange }) {
               />
               <button 
                 type="button" 
-                className="absolute right-3.5 bg-transparent border-none text-[#9BADBF] cursor-pointer p-1.5 rounded-md transition-all duration-300 flex items-center justify-center w-8 h-8 hover:text-[#9BADBF] hover:bg-[#9BADBF]/10"
+                className="absolute right-3.5 bg-transparent border-none text-[#2563eb] cursor-pointer p-1.5 rounded-md transition-all duration-300 flex items-center justify-center w-8 h-8 hover:text-[#2563eb] hover:bg-[#2563eb]/10"
                 style={{ marginTop: '10px' }}
                 onClick={() => setShowNewPassword(!showNewPassword)}
               >
@@ -547,8 +537,8 @@ export default function UserProfile({ user, onUserChange }) {
               </span>
             )}
 
-            <div className="bg-slate-200/40 border border-[#9BADBF]/25 rounded-lg p-4 mt-3 text-xs text-slate-600">
-              <strong className="text-[#9BADBF] block mb-2.5 text-sm">
+            <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg p-4 mt-3 text-xs text-[#64748b]">
+              <strong className="text-[#2563eb] block mb-2.5 text-sm">
                 Password Requirements:
               </strong>
               <ul className="m-0 pl-5">
@@ -588,17 +578,17 @@ export default function UserProfile({ user, onUserChange }) {
             </div>
           </div>
 
-          <div className="mb-6">
-            <label className="block font-semibold text-[#9BADBF] mb-2 text-sm uppercase tracking-wide">
+            <div className="mb-6">
+            <label className="block font-semibold text-[#1e293b] mb-2 text-sm uppercase tracking-wide">
               Confirm New Password
             </label>
             <div className="relative flex items-center w-full">
-              <Lock size={18} className="absolute left-3.5 text-[#9BADBF] pointer-events-none" style={{ paddingTop: '11px' }} />
+              <Lock size={18} className="absolute left-3.5 text-[#64748b] pointer-events-none" style={{ paddingTop: '11px' }} />
               <input
                 className={`w-full py-3.5 px-12 border-2 rounded-lg text-base transition-all duration-300 bg-white ${
                   passwordErrors.confirmPassword 
                     ? 'border-red-600 shadow-[0_0_0_4px_rgba(220,38,38,0.1)]' 
-                    : 'border-gray-200 focus:border-[#9BADBF] focus:shadow-[0_0_0_4px_rgba(82,109,130,0.1)]'
+                    : 'border-[#e2e8f0] focus:border-[#2563eb] focus:shadow-[0_0_0_8px_rgba(37,99,235,0.06)]'
                 } focus:outline-none`}
                 type={showConfirmPassword ? 'text' : 'password'}
                 value={passwordData.confirmPassword}
@@ -610,7 +600,7 @@ export default function UserProfile({ user, onUserChange }) {
               />
               <button 
                 type="button" 
-                className="absolute right-3.5 bg-transparent border-none text-[#9BADBF] cursor-pointer p-1.5 rounded-md transition-all duration-300 flex items-center justify-center w-8 h-8 hover:text-[#9BADBF] hover:bg-[#9BADBF]/10"
+                className="absolute right-3.5 bg-transparent border-none text-[#2563eb] cursor-pointer p-1.5 rounded-md transition-all duration-300 flex items-center justify-center w-8 h-8 hover:text-[#2563eb] hover:bg-[#2563eb]/10"
                 style={{ marginTop: '10px' }}
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               >
@@ -635,10 +625,10 @@ export default function UserProfile({ user, onUserChange }) {
             </div>
           )}
 
-          <div className="flex gap-3 justify-end mt-7 pt-6 border-t-2 border-[#9BADBF]/10">
+          <div className="flex gap-3 justify-end mt-7 pt-6 border-t-2 border-[#e2e8f0]">
             <button 
               type="button" 
-              className="px-7 py-3.5 rounded-lg text-base font-semibold transition-all duration-300 bg-slate-200/50 text-slate-600 border-2 border-slate-200/80 hover:bg-slate-200/80 hover:border-[#9BADBF] hover:text-[#9BADBF] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0"
+              className="px-7 py-3.5 rounded-lg text-base font-semibold transition-all duration-300 bg-slate-200/50 text-slate-600 border-2 border-slate-200/80 hover:bg-slate-200/80 hover:border-[#2563eb] hover:text-[#2563eb] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0"
               onClick={() => setPasswordData({ 
                 currentPassword: '', 
                 newPassword: '', 
@@ -651,18 +641,8 @@ export default function UserProfile({ user, onUserChange }) {
               type="button" 
               className="flex items-center gap-2 px-7 py-3.5 rounded-lg text-base font-semibold text-white transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none hover:-translate-y-0.5 active:translate-y-0"
               style={{
-                background: 'linear-gradient(135deg, #9BADBF, #9BADBF)',
-                boxShadow: '0 4px 12px rgba(82, 109, 130, 0.3)'
-              }}
-              onMouseEnter={(e) => {
-                if (!isLoading) {
-                  e.currentTarget.style.background = 'linear-gradient(135deg, #1e2a3e, #9BADBF)';
-                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(82, 109, 130, 0.4)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'linear-gradient(135deg, #9BADBF, #9BADBF)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(82, 109, 130, 0.3)';
+                background: 'linear-gradient(135deg,#2563eb,#8b5cf6)',
+                boxShadow: '0 6px 18px rgba(37,99,235,0.16)'
               }}
               disabled={isLoading} 
               onClick={handlePasswordUpdate}

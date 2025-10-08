@@ -154,15 +154,15 @@ const NotificationBell = () => {
         className={`rounded-full w-12 h-12 flex items-center justify-center cursor-pointer transition-all duration-300 relative ${
             unreadCount > 0
               ? 'bg-red-600/10 border border-red-600/30 hover:bg-red-600/20'
-              : 'bg-[#2F6FA6]/10 border border-[#DDEAF8] hover:bg-[#2F6FA6]/12'
+              : 'bg-[#2563eb]/10 border border-[#e2e8f0] hover:bg-[#2563eb]/12'
           } hover:-translate-y-0.5 hover:shadow-lg`}
-          style={{ color: '#DDEAF8' }}
+          style={{ color: '#2563eb' }}
       >
-        <Bell size={24} className={unreadCount > 0 ? 'animate-pulse' : ''} />
+        <Bell size={24} className={unreadCount > 0 ? 'animate-pulse text-red-600' : 'text-[#2563eb]'} />
         {unreadCount > 0 && (
           <span 
-            className="absolute -top-1.5 -right-1.5 bg-[#06283B] text-white rounded-full w-5 h-5 text-xs font-bold flex items-center justify-center border-2 animate-pulse"
-                    style={{ borderWidth: '2px', borderStyle: 'solid', borderColor: '#123F66' }}
+            className="absolute -top-1.5 -right-1.5 bg-[#1e293b] text-white rounded-full w-5 h-5 text-xs font-bold flex items-center justify-center border-2 animate-pulse"
+                    style={{ borderWidth: '2px', borderStyle: 'solid', borderColor: '#1e293b' }}
           >
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
@@ -221,12 +221,12 @@ const NotificationBell = () => {
                   onClick={markAllAsRead}
                   className="rounded-md px-2.5 py-2 flex items-center gap-1 min-h-[32px] transition-all duration-200 hover:scale-105"
                   style={{
-                      background: 'rgba(221, 230, 237, 0.2)',
-                      borderWidth: '1px',
-                      borderStyle: 'solid',
-                      borderColor: 'rgba(221, 230, 237, 0.3)',
-                      color: '#DDE6ED'
-                    }}
+                        background: 'rgba(37,99,235,0.08)',
+                        borderWidth: '1px',
+                        borderStyle: 'solid',
+                        borderColor: 'rgba(37,99,235,0.12)',
+                        color: '#1e293b'
+                      }}
                 >
                   <CheckCheck size={16} />
                 </button>
@@ -234,11 +234,11 @@ const NotificationBell = () => {
             </div>
 
             {/* Notification List */}
-            <div className="overflow-y-auto flex-1 bg-[#F7F6F6] min-h-[200px]">
+            <div className="overflow-y-auto flex-1 bg-[#f8fafc] min-h-[200px]">
               {notifications.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-15 px-5 text-gray-400 text-center min-h-[200px]">
-                  <Bell size={40} className="text-gray-300 mb-4" />
-                  <p className="m-0 text-sm font-medium">No notifications yet</p>
+                <div className="flex flex-col items-center justify-center py-15 px-5 text-[#64748b] text-center min-h-[200px]">
+                  <Bell size={40} className="text-[#cbd5e1] mb-4" />
+                  <p className="m-0 text-sm font-medium text-[#64748b]">No notifications yet</p>
                 </div>
               ) : (
                 notifications
@@ -247,10 +247,10 @@ const NotificationBell = () => {
                     <div
                       key={notification.id}
                       className={`py-3.5 px-4 border-b border-black/5 transition-all duration-200 ${
-                          notification.read
-                            ? 'bg-white opacity-65'
-                            : 'bg-[#DDEAF8] border-l-4 border-l-[#2F6FA6]'
-                        }`}
+                            notification.read
+                              ? 'bg-white opacity-95'
+                              : 'bg-[#e6f0ff] border-l-4 border-l-[#2563eb]'
+                          }`}
                     >
                       <div className="flex items-start gap-3">
                         {/* Priority Indicator */}
@@ -261,10 +261,10 @@ const NotificationBell = () => {
                         
                         {/* Message Content */}
                         <div className="flex-1 min-w-0">
-                          <p className="m-0 mb-1.5 text-sm font-medium text-slate-800 leading-relaxed break-words">
+                          <p className="m-0 mb-1.5 text-sm font-medium text-[#1e293b] leading-relaxed break-words">
                             {notification.message}
                           </p>
-                          <span className="text-xs text-slate-500">
+                          <span className="text-xs text-[#64748b]">
                             {formatTimestamp(notification.timestamp)}
                           </span>
                         </div>
@@ -274,7 +274,7 @@ const NotificationBell = () => {
                           {/* Toggle Read/Unread */}
                           <button
                             onClick={() => markAsRead(notification.id)}
-                            className="bg-transparent border-none text-gray-400 cursor-pointer p-1.5 rounded transition-all duration-200 flex items-center justify-center min-w-[28px] min-h-[28px] hover:bg-[#2F6FA6]/10 hover:text-[#2F6FA6] hover:scale-110"
+                            className="bg-transparent border-none text-[#64748b] cursor-pointer p-1.5 rounded transition-all duration-200 flex items-center justify-center min-w-[28px] min-h-[28px] hover:bg-[#2563eb]/10 hover:text-[#2563eb] hover:scale-110"
                           >
                             {notification.read ? <Mail size={14} /> : <MailOpen size={14} />}
                           </button>
@@ -282,7 +282,7 @@ const NotificationBell = () => {
                           {/* Delete */}
                           <button
                             onClick={() => clearNotification(notification.id)}
-                            className="bg-transparent border-none text-gray-400 cursor-pointer p-1.5 rounded transition-all duration-200 flex items-center justify-center min-w-[28px] min-h-[28px] hover:bg-red-500/10 hover:text-red-600 hover:scale-110"
+                            className="bg-transparent border-none text-[#ef4444] cursor-pointer p-1.5 rounded transition-all duration-200 flex items-center justify-center min-w-[28px] min-h-[28px] hover:bg-red-500/10 hover:text-red-600 hover:scale-110"
                           >
                             <X size={14} />
                           </button>

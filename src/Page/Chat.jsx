@@ -171,7 +171,6 @@ export default function Chat({ user }) {
   };
 
   const sendMessage = (e) => {
-    // Accept optional event (keyboard or click). Only prevent default if an event is provided.
     if (e && typeof e.preventDefault === 'function') e.preventDefault();
     if (!newMessage.trim() || !selectedUser || selectedUser.isRequest) return;
 
@@ -332,44 +331,41 @@ export default function Chat({ user }) {
   };
 
   const formatTime = (timestamp) => {
-  if (!timestamp) return "";
+    if (!timestamp) return "";
 
-  // Parse the timestamp
-  let date = new Date(timestamp);
+    let date = new Date(timestamp);
 
-  // Return empty string if date is invalid
-  if (isNaN(date.getTime())) {
-    console.warn('Invalid timestamp:', timestamp);
-    return "";
-  }
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid timestamp:', timestamp);
+      return "";
+    }
 
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const messageDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  
-  const diffTime = today.getTime() - messageDate.getTime();
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const messageDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    
+    const diffTime = today.getTime() - messageDate.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-  const timePart = date.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
+    const timePart = date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
 
-  // Messenger-style display
-  if (diffDays === 0) {
-    return timePart;  // Today - just show time
-  } else if (diffDays === 1) {
-    return `Yesterday, ${timePart}`;
-  } else if (diffDays < 7) {
-    return `${date.toLocaleDateString("en-US", { weekday: "long" })}, ${timePart}`;
-  } else {
-    return `${date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    })}, ${timePart}`;
-  }
-};
+    if (diffDays === 0) {
+      return timePart;
+    } else if (diffDays === 1) {
+      return `Yesterday, ${timePart}`;
+    } else if (diffDays < 7) {
+      return `${date.toLocaleDateString("en-US", { weekday: "long" })}, ${timePart}`;
+    } else {
+      return `${date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      })}, ${timePart}`;
+    }
+  };
 
   const truncateMessage = (message, maxLength = 25) => {
     if (!message) return '';
@@ -386,11 +382,11 @@ export default function Chat({ user }) {
   const totalRequestsCount = messageRequests.reduce((sum, req) => sum + req.unreadCount, 0);
 
   return (
-  <div className="flex h-[calc(100vh-48px)] bg-white rounded-xl overflow-hidden shadow-lg">
+    <div className="flex h-[calc(100vh-48px)] bg-white rounded-xl overflow-hidden shadow-lg">
       {/* Sidebar */}
-  <div className="w-80 border-r-2 border-[#DDEAF8] flex flex-col">
+      <div className="w-80 border-r-2 border-blue-100 flex flex-col">
         {/* Sidebar Header */}
-  <div className="p-5 bg-[#2F6FA6] text-white flex justify-between items-center">
+        <div className="p-5 bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex justify-between items-center">
           <h2 className="m-0 text-xl font-semibold">Messages</h2>
           <button 
             className="bg-white/20 border border-white/30 text-white w-9 h-9 min-w-[36px] min-h-[36px] rounded-full flex items-center justify-center cursor-pointer transition-all hover:bg-white/30 hover:scale-105"
@@ -403,7 +399,7 @@ export default function Chat({ user }) {
 
         {/* Add User Modal */}
         {showAddUser && (
-          <div className="bg-white border-b-2 border-[#DDEAF8] p-4">
+          <div className="bg-white border-b-2 border-blue-100 p-4">
             <div className="flex justify-between items-center mb-3">
               <h3 className="m-0 text-base text-slate-800 font-semibold">Add Contact</h3>
               <button 
@@ -424,11 +420,11 @@ export default function Chat({ user }) {
                 onChange={(e) => setEmailSearch(e.target.value)}
                 onKeyUp={searchUserByEmail}
                 placeholder="Search by email..."
-                className="flex-1 p-2 border-2 border-gray-200 rounded-lg text-sm outline-none focus:border-[#2F6FA6]"
+                className="flex-1 p-2 border-2 border-gray-200 rounded-lg text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
               />
               <button 
                 onClick={searchUserByEmail} 
-                className="bg-[#2F6FA6] text-white border-none rounded-lg px-3 cursor-pointer flex items-center justify-center"
+                className="bg-blue-500 text-white border-none rounded-lg px-3 cursor-pointer flex items-center justify-center hover:bg-blue-600"
               >
                 <Search size={18} />
               </button>
@@ -438,8 +434,8 @@ export default function Chat({ user }) {
                 <p className="text-center text-slate-500 py-5 text-sm">No users found</p>
               )}
               {emailSearchResults.map(u => (
-                <div key={u.id} className="flex items-center p-3 border border-[#DDEAF8] rounded-lg mb-2 gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#123F66] flex items-center justify-center text-white overflow-hidden">
+                <div key={u.id} className="flex items-center p-3 border border-blue-100 rounded-lg mb-2 gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white overflow-hidden">
                     {u.profile_image ? (
                       <img src={`http://localhost:3001/${u.profile_image}`} alt={u.name} className="w-full h-full object-cover" />
                     ) : (
@@ -452,7 +448,7 @@ export default function Chat({ user }) {
                   </div>
                   <button
                     onClick={() => addContact(u.id)}
-                    className="bg-[#2F6FA6] text-white border-none rounded-md px-4 py-1.5 text-xs font-semibold cursor-pointer transition-all hover:bg-[#5D8CCF] disabled:bg-[#A7C2E8] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="bg-blue-500 text-white border-none rounded-md px-4 py-1.5 text-xs font-semibold cursor-pointer transition-all hover:bg-blue-600 disabled:bg-slate-300 disabled:cursor-not-allowed disabled:opacity-60"
                     disabled={contacts.includes(u.id)}
                   >
                     {contacts.includes(u.id) ? 'Added' : 'Add'}
@@ -464,16 +460,16 @@ export default function Chat({ user }) {
         )}
 
         {/* Tabs */}
-        <div className="flex bg-white border-b-2 border-[#DDEAF8]">
+        <div className="flex bg-white border-b-2 border-blue-100">
           <button 
-            className={`flex-1 py-3.5 px-4 bg-transparent border-none text-slate-500 text-sm font-semibold cursor-pointer transition-all flex items-center justify-center gap-2 relative border-b-[3px] border-transparent hover:bg-[#DDEAF8] hover:text-slate-800 ${activeTab === 'contacts' ? 'text-slate-800 border-b-[#2F6FA6] bg-[#DDEAF8]' : ''}`}
+            className={`flex-1 py-3.5 px-4 bg-transparent border-none text-slate-500 text-sm font-semibold cursor-pointer transition-all flex items-center justify-center gap-2 relative border-b-[3px] border-transparent hover:bg-blue-50 hover:text-slate-800 ${activeTab === 'contacts' ? 'text-slate-800 border-b-blue-500 bg-blue-50' : ''}`}
             onClick={() => setActiveTab('contacts')}
           >
             <User size={16} />
             Contacts
           </button>
           <button 
-            className={`flex-1 py-3.5 px-4 bg-transparent border-none text-slate-500 text-sm font-semibold cursor-pointer transition-all flex items-center justify-center gap-2 relative border-b-[3px] border-transparent hover:bg-[#DDEAF8] hover:text-slate-800 ${activeTab === 'requests' ? 'text-slate-800 border-b-[#2F6FA6] bg-[#DDEAF8]' : ''}`}
+            className={`flex-1 py-3.5 px-4 bg-transparent border-none text-slate-500 text-sm font-semibold cursor-pointer transition-all flex items-center justify-center gap-2 relative border-b-[3px] border-transparent hover:bg-blue-50 hover:text-slate-800 ${activeTab === 'requests' ? 'text-slate-800 border-b-blue-500 bg-blue-50' : ''}`}
             onClick={() => setActiveTab('requests')}
           >
             <Clock size={16} />
@@ -487,14 +483,14 @@ export default function Chat({ user }) {
         </div>
 
         {/* Search Bar */}
-        <div className="relative p-4 border-b border-[#DDEAF8] bg-white">
+        <div className="relative p-4 border-b border-blue-100 bg-white">
           <Search size={18} className="absolute left-7 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={activeTab === 'contacts' ? 'Search contacts...' : 'Search requests...'}
-            className="w-full py-2.5 pr-10 pl-10 border-2 border-gray-200 rounded-[20px] text-sm outline-none transition-all focus:border-[#2F6FA6]"
+            className="w-full py-2.5 pr-10 pl-10 border-2 border-gray-200 rounded-[20px] text-sm outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
           />
           {searchQuery && (
             <button 
@@ -507,7 +503,7 @@ export default function Chat({ user }) {
         </div>
 
         {/* Users List */}
-  <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto">
           {activeTab === 'contacts' ? (
             filteredContacts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-15 px-5 text-slate-500 text-center">
@@ -524,10 +520,10 @@ export default function Chat({ user }) {
                 return (
                   <div
                     key={u.id}
-                    className={`flex items-center py-4 px-5 cursor-pointer transition-all border-b border-[#DDEAF8] hover:bg-[#DDEAF8] group ${selectedUser?.id === u.id ? 'bg-[#DDEAF8] border-l-4 border-l-[#2F6FA6]' : ''} ${isUnread ? 'bg-[#DDEAF8]/30' : ''}`}
+                    className={`flex items-center py-4 px-5 cursor-pointer transition-all border-b border-blue-100 hover:bg-blue-50 group ${selectedUser?.id === u.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''} ${isUnread ? 'bg-blue-50/30' : ''}`}
                   >
                     <div onClick={() => setSelectedUser(u)} className="flex items-center flex-1 cursor-pointer gap-3">
-                      <div className="w-12 h-12 rounded-full bg-[#123F66] flex items-center justify-center text-white mr-3 overflow-hidden">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white mr-3 overflow-hidden">
                         {u.profile_image ? (
                           <img src={`http://localhost:3001/${u.profile_image}`} alt={u.name} className="w-full h-full object-cover" />
                         ) : (
@@ -538,7 +534,7 @@ export default function Chat({ user }) {
                         <div className="flex justify-between items-center mb-1">
                           <div className="font-semibold text-slate-800">{u.name}</div>
                           {unreadCount > 0 && (
-                            <span className="bg-[#06283B] text-white text-[11px] font-bold py-0.5 px-1.5 rounded-xl min-w-[18px] h-[18px] flex items-center justify-center shadow-md">
+                            <span className="bg-blue-600 text-white text-[11px] font-bold py-0.5 px-1.5 rounded-xl min-w-[18px] h-[18px] flex items-center justify-center shadow-md">
                               {unreadCount}
                             </span>
                           )}
@@ -583,12 +579,12 @@ export default function Chat({ user }) {
                 if (!reqUser) return null;
                 
                 return (
-                  <div key={req.userId} className="flex py-4 px-5 border-b border-[#DDEAF8] gap-3 bg-[#DDEAF8]/30 transition-all hover:bg-[#DDEAF8]/60">
+                  <div key={req.userId} className="flex py-4 px-5 border-b border-blue-100 gap-3 bg-blue-50/30 transition-all hover:bg-blue-50/60">
                     <div 
                       onClick={() => viewMessageRequest(req.userId)}
                       className="flex gap-3 cursor-pointer flex-1"
                     >
-                      <div className="w-12 h-12 rounded-full bg-[#123F66] flex items-center justify-center text-white overflow-hidden">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white overflow-hidden">
                         {req.userImage ? (
                           <img src={`http://localhost:3001/${req.userImage}`} alt={req.userName} className="w-full h-full object-cover" />
                         ) : (
@@ -599,7 +595,7 @@ export default function Chat({ user }) {
                         <div className="flex justify-between items-center mb-1.5">
                           <div className="font-semibold text-slate-800">{req.userName}</div>
                           {req.unreadCount > 0 && (
-                            <span className="bg-[#06283B] text-white text-[11px] font-bold py-0.5 px-1.5 rounded-xl min-w-[18px] h-[18px] flex items-center justify-center shadow-md">
+                            <span className="bg-blue-600 text-white text-[11px] font-bold py-0.5 px-1.5 rounded-xl min-w-[18px] h-[18px] flex items-center justify-center shadow-md">
                               {req.unreadCount}
                             </span>
                           )}
@@ -609,7 +605,7 @@ export default function Chat({ user }) {
                         </div>
                         <div className="flex gap-2 mt-2.5">
                           <button 
-                            className="flex-1 py-2 px-3 bg-[#2F6FA6] text-white border-none rounded-md text-xs font-semibold cursor-pointer transition-all hover:bg-[#5D8CCF] hover:-translate-y-0.5 hover:shadow-md"
+                            className="flex-1 py-2 px-3 bg-blue-500 text-white border-none rounded-md text-xs font-semibold cursor-pointer transition-all hover:bg-blue-600 hover:-translate-y-0.5 hover:shadow-md"
                             onClick={(e) => {
                               e.stopPropagation();
                               acceptMessageRequest(req.userId);
@@ -642,8 +638,8 @@ export default function Chat({ user }) {
         {selectedUser ? (
           <>
             {/* Chat Header */}
-            <div className="flex items-center py-4 px-5 bg-[#2F6FA6] text-white gap-3">
-              <div className="w-12 h-12 rounded-full bg-[#123F66] flex items-center justify-center text-white overflow-hidden">
+            <div className="flex items-center py-4 px-5 bg-gradient-to-br from-blue-600 to-indigo-700 text-white gap-3">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-700 to-purple-700 flex items-center justify-center text-white overflow-hidden">
                 {selectedUser.profile_image ? (
                   <img src={`http://localhost:3001/${selectedUser.profile_image}`} alt={selectedUser.name} className="w-full h-full object-cover" />
                 ) : (
@@ -657,7 +653,7 @@ export default function Chat({ user }) {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-5 bg-[#F7F6F6]">
+            <div className="flex-1 overflow-y-auto p-5 bg-slate-50">
               {messages.map((msg) => (
                 <div
                   key={msg.id}
@@ -666,36 +662,34 @@ export default function Chat({ user }) {
                   {editingMessageId === msg.id ? (
                     <div className="w-full">
                       <textarea
-                          value={editingText}
-                          onChange={(e) => {
-                            setEditingText(e.target.value);
-                            // Auto-resize
-                            e.target.style.height = 'auto';
-                            e.target.style.height = Math.min(e.target.scrollHeight, 400) + 'px';
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                              e.preventDefault();
-                              saveEditedMessage(msg.id);
-                            }
-                            if (e.key === 'Escape') {
-                              cancelEditing();
-                            }
-                          }}
-                          ref={(el) => {
-                            if (el) {
-                              // Auto-resize on mount
-                              el.style.height = 'auto';
-                              el.style.height = Math.min(el.scrollHeight, 400) + 'px';
-                            }
-                          }}
-                          autoFocus
-                          className="w-full p-3 rounded-xl border-2 border-[#2F6FA6] text-sm resize-none min-h-[80px] max-h-[400px] overflow-y-auto"
-                        />
+                        value={editingText}
+                        onChange={(e) => {
+                          setEditingText(e.target.value);
+                          e.target.style.height = 'auto';
+                          e.target.style.height = Math.min(e.target.scrollHeight, 400) + 'px';
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            saveEditedMessage(msg.id);
+                          }
+                          if (e.key === 'Escape') {
+                            cancelEditing();
+                          }
+                        }}
+                        ref={(el) => {
+                          if (el) {
+                            el.style.height = 'auto';
+                            el.style.height = Math.min(el.scrollHeight, 400) + 'px';
+                          }
+                        }}
+                        autoFocus
+                        className="w-full p-3 rounded-xl border-2 border-blue-500 text-sm resize-none min-h-[80px] max-h-[400px] overflow-y-auto focus:outline-none focus:ring-2 focus:ring-blue-200"
+                      />
                       <div className="flex gap-2 mt-2">
                         <button
                           onClick={() => saveEditedMessage(msg.id)}
-                          className="px-4 py-1.5 bg-[#2F6FA6] text-white border-none rounded-md text-xs font-semibold cursor-pointer"
+                          className="px-4 py-1.5 bg-gradient-to-br from-blue-600 to-indigo-700 text-white border-none rounded-md text-xs font-semibold cursor-pointer"
                         >
                           Save
                         </button>
@@ -709,7 +703,7 @@ export default function Chat({ user }) {
                     </div>
                   ) : (
                     <>
-                      <div className={`py-3 px-4 rounded-xl break-words ${msg.sender_id === user.id ? 'bg-[#123F66] text-white rounded-br-sm' : 'bg-white text-slate-800 border border-[#DDEAF8] rounded-bl-sm'}`}>
+                      <div className={`py-3 px-4 rounded-xl break-words ${msg.sender_id === user.id ? 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-br-sm' : 'bg-slate-50 text-slate-800 border border-blue-100 rounded-bl-sm'}`}>
                         {msg.deleted ? (
                           <i className="text-gray-400 italic">
                             This message has been deleted
@@ -730,7 +724,7 @@ export default function Chat({ user }) {
                       {msg.sender_id === user.id && !msg.deleted && (
                         <div className="flex gap-1.5 mt-1">
                           <button
-                            className="bg-none border-none cursor-pointer text-xs text-slate-500 py-0.5 px-1.5 rounded-md transition-all hover:bg-[#DDEAF8] hover:text-slate-800"
+                            className="bg-none border-none cursor-pointer text-xs text-slate-500 py-0.5 px-1.5 rounded-md transition-all hover:bg-blue-50 hover:text-slate-800"
                             onClick={() => startEditingMessage(msg)}
                             title="Edit message"
                           >
@@ -754,7 +748,7 @@ export default function Chat({ user }) {
             </div>
 
             {/* Input Form */}
-            <div className="flex p-4 bg-white border-t-2 border-[#DDEAF8] gap-3">
+            <div className="flex p-4 bg-slate-50 border-t-2 border-blue-100 gap-3">
               <input
                 type="text"
                 value={newMessage}
@@ -766,12 +760,12 @@ export default function Chat({ user }) {
                   }
                 }}
                 placeholder={selectedUser.isRequest ? "Accept request to reply..." : "Type a message..."}
-                className="flex-1 py-3 px-4 border-2 border-gray-200 rounded-3xl text-sm outline-none transition-all focus:border-[#2F6FA6] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 py-3 px-4 border-2 border-gray-200 rounded-3xl text-sm outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={selectedUser.isRequest}
               />
               <button 
                 onClick={() => sendMessage()} 
-                className="w-11 h-11 rounded-full bg-[#123F66] text-white border-none cursor-pointer flex items-center justify-center transition-all hover:bg-[#06283B] hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 text-white border-none cursor-pointer flex items-center justify-center transition-all hover:bg-blue-600 hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={selectedUser.isRequest}
               >
                 <Send size={20} />

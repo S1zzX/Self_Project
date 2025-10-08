@@ -44,40 +44,40 @@ function CompanyIntro({ user, setSidebarVisible, onGetStarted }) {
   return (
     <div className="max-w-full m-0 bg-white/95 min-h-screen">
       {/* Header Section */}
-      <div 
+      <div
         className="relative text-white py-20 px-10 text-center overflow-hidden"
         style={{
-          background: '#526D82'
+          background: 'linear-gradient(180deg, #2563eb 0%, #1e3a5f 100%)'
         }}
       >
         {/* Background Pattern */}
-        <div 
+        <div
           className="absolute inset-0"
           style={{
-            background: `radial-gradient(circle at 20% 50%, rgba(82, 109, 130, 0.1) 0%, transparent 50%),
-                        radial-gradient(circle at 80% 20%, rgba(221, 230, 237, 0.1) 0%, transparent 50%),
-                        radial-gradient(circle at 40% 80%, rgba(82, 109, 130, 0.05) 0%, transparent 50%)`
+            background: `radial-gradient(circle at 20% 50%, rgba(37,99,235,0.10) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(241,245,249,0.06) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 80%, rgba(37,99,235,0.05) 0%, transparent 50%)`
           }}
         />
-        
+
         <div className="relative z-[2]">
-          <div 
+          <div
             className="w-30 h-30 rounded-full flex items-center justify-center mx-auto mb-8 border-4 border-white/20"
             style={{
-              background: '#526D82',
-              boxShadow: '0 8px 24px rgba(82, 109, 130, 0.3)'
+              background: '#2563eb',
+              boxShadow: '0 8px 24px rgba(37,99,235,0.22)'
             }}
           >
-            <i className="fa fa-code" style={{ fontSize: '48px', color: '#3C4447' }}></i>
+            <i className="fa fa-code" style={{ fontSize: '48px', color: '#f8fafc' }}></i>
           </div>
 
-          <h1 className="text-5xl font-bold mb-4" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.3)' }}>
+          <h1 className="text-5xl font-bold mb-4" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)' }}>
             TaskFlow Solutions
           </h1>
-          <p className="text-2xl font-light mb-6 opacity-90">
+          <p className="text-2xl font-light mb-6 opacity-90 text-[#f1f5f9]">
             Transforming Business Operations Through Innovation
           </p>
-          <p className="text-lg leading-relaxed max-w-3xl mx-auto mb-8 opacity-90">
+          <p className="text-lg leading-relaxed max-w-3xl mx-auto mb-8 opacity-90 text-[#f1f5f9]">
             {user ? `Welcome, ${user.name}! We're` : "We're"} a leading technology company specializing in
             digital transformation, project management solutions, and business process optimization.
           </p>
@@ -85,33 +85,30 @@ function CompanyIntro({ user, setSidebarVisible, onGetStarted }) {
       </div>
 
       {/* Statistics Section */}
-      <div className="py-20 px-10 bg-slate-200/10">
+      <div className="py-20 px-10 bg-[#f8fafc]">
         <div className="max-w-6xl mx-auto text-center">
-          <h2 className="text-4xl font-bold text-[#27374D] mb-12">
-            Our Impact in Numbers
-          </h2>
+          <h2 className="text-4xl font-bold text-[#2563eb] mb-12">Our Impact in Numbers</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
-              <div 
-                key={index} 
-                className="bg-white/90 rounded-2xl py-10 px-6 text-center border-2 border-[#526D82]/10 transition-all duration-300 hover:-translate-y-2 hover:border-[#526D82]"
-                style={{ boxShadow: '0 8px 24px rgba(39, 55, 77, 0.1)' }}
+              <div
+                key={index}
+                className="bg-white rounded-2xl py-10 px-6 text-center border-2"
+                style={{
+                  borderColor: 'rgba(37,99,235,0.08)',
+                  boxShadow: '0 8px 24px rgba(39, 55, 77, 0.06)'
+                }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = '0 16px 32px rgba(39, 55, 77, 0.2)';
+                  e.currentTarget.style.boxShadow = '0 16px 32px rgba(39, 55, 77, 0.12)';
+                  e.currentTarget.style.borderColor = '#2563eb';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(39, 55, 77, 0.1)';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(39, 55, 77, 0.06)';
+                  e.currentTarget.style.borderColor = 'rgba(37,99,235,0.08)';
                 }}
               >
-                <div className="text-[#526D82] mb-4 flex justify-center">
-                  {stat.icon}
-                </div>
-                <div className="text-5xl font-bold text-[#27374D] mb-2">
-                  {stat.value}
-                </div>
-                <div className="text-lg text-slate-600 font-medium">
-                  {stat.label}
-                </div>
+                <div className="text-[#2563eb] mb-4 flex justify-center">{stat.icon}</div>
+                <div className="text-5xl font-bold text-[#1e293b] mb-2">{stat.value}</div>
+                <div className="text-lg text-slate-600 font-medium">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -119,37 +116,34 @@ function CompanyIntro({ user, setSidebarVisible, onGetStarted }) {
       </div>
 
       {/* Features Section */}
-      <div className="py-20 px-10 bg-white/95">
+      <div className="py-20 px-10 bg-white">
         <div className="max-w-6xl mx-auto text-center">
-          <h2 className="text-4xl font-bold text-[#27374D] mb-6">
-            Why Choose TaskFlow Solutions?
-          </h2>
+          <h2 className="text-4xl font-bold text-[#1e293b] mb-6">Why Choose TaskFlow Solutions?</h2>
           <p className="text-lg text-slate-600 leading-relaxed max-w-3xl mx-auto mb-12">
             We combine cutting-edge technology with deep industry expertise to deliver
             solutions that drive real business results.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, index) => (
-              <div 
-                key={index} 
-                className="bg-white/90 rounded-2xl py-10 px-6 text-center border-2 border-[#526D82]/10 transition-all duration-300 hover:-translate-y-2 hover:border-[#526D82]"
-                style={{ boxShadow: '0 8px 24px rgba(39, 55, 77, 0.1)' }}
+              <div
+                key={index}
+                className="bg-white rounded-2xl py-10 px-6 text-center border-2"
+                style={{
+                  borderColor: 'rgba(37,99,235,0.06)',
+                  boxShadow: '0 8px 24px rgba(39, 55, 77, 0.06)'
+                }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.boxShadow = '0 16px 32px rgba(39, 55, 77, 0.2)';
+                  e.currentTarget.style.boxShadow = '0 16px 32px rgba(39, 55, 77, 0.12)';
+                  e.currentTarget.style.borderColor = '#2563eb';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(39, 55, 77, 0.1)';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(39, 55, 77, 0.06)';
+                  e.currentTarget.style.borderColor = 'rgba(37,99,235,0.06)';
                 }}
               >
-                <div className="text-[#526D82] mb-6 flex justify-center">
-                  {feature.icon}
-                </div>
-                <h3 className="text-2xl font-bold text-[#27374D] mb-4">
-                  {feature.title}
-                </h3>
-                <p className="text-base text-slate-600 leading-relaxed m-0">
-                  {feature.description}
-                </p>
+                <div className="text-[#2563eb] mb-6 flex justify-center">{feature.icon}</div>
+                <h3 className="text-2xl font-bold text-[#1e293b] mb-4">{feature.title}</h3>
+                <p className="text-base text-slate-600 leading-relaxed m-0">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -157,19 +151,17 @@ function CompanyIntro({ user, setSidebarVisible, onGetStarted }) {
       </div>
 
       {/* Mission Section */}
-      <div 
+      <div
         className="py-20 px-10"
         style={{
-          background: 'rgba(226, 232, 240, 0.3)'
+          background: 'rgba(226, 232, 240, 0.14)'
         }}
       >
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-4xl font-bold text-[#27374D] mb-8">
-            Our Mission
-          </h2>
-          <p 
-            className="text-xl leading-relaxed text-slate-600 italic m-0 p-8 bg-white/90 rounded-2xl border-l-4 border-[#526D82]"
-            style={{ boxShadow: '0 8px 24px rgba(39, 55, 77, 0.1)' }}
+          <h2 className="text-4xl font-bold text-[#1e293b] mb-8">Our Mission</h2>
+          <p
+            className="text-xl leading-relaxed text-slate-600 italic m-0 p-8 bg-white rounded-2xl border-l-4"
+            style={{ boxShadow: '0 8px 24px rgba(39, 55, 77, 0.06)', borderColor: 'rgba(37,99,235,0.12)' }}
           >
             "To empower businesses with innovative technology solutions that streamline operations,
             enhance productivity, and drive sustainable growth in an ever-evolving digital landscape."
@@ -178,35 +170,33 @@ function CompanyIntro({ user, setSidebarVisible, onGetStarted }) {
       </div>
 
       {/* CTA Section */}
-      <div 
-        className="py-20 px-10 text-white text-center"
+      <div
+        className="py-20 px-10 text-center"
         style={{
-          background: '#526D82'
+          background: '#2563eb'
         }}
       >
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-4xl font-bold mb-6">
-            Ready to Transform Your Business?
-          </h2>
+        <div className="max-w-3xl mx-auto text-white">
+          <h2 className="text-4xl font-bold mb-6">Ready to Transform Your Business?</h2>
           <p className="text-lg leading-relaxed mb-10 opacity-90">
             Let's discuss how TaskFlow Solutions can help you achieve your business goals
             through innovative technology and strategic planning.
           </p>
           <button
-            className="inline-flex items-center gap-3 text-[#27374D] border-none rounded-xl px-8 py-4 text-lg font-semibold cursor-pointer transition-all duration-300"
+            className="inline-flex items-center gap-3 text-white border-none rounded-xl px-8 py-4 text-lg font-semibold cursor-pointer transition-all duration-300"
             style={{
-              background: '#9DB2BF',
-              boxShadow: '0 8px 24px rgba(157, 178, 191, 0.3)'
+              background: '#1e3a5f',
+              boxShadow: '0 8px 24px rgba(37,99,235,0.12)'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = '#DDE6ED';
+              e.currentTarget.style.background = '#3b82f6';
               e.currentTarget.style.transform = 'translateY(-4px)';
-              e.currentTarget.style.boxShadow = '0 12px 32px rgba(157, 178, 191, 0.4)';
+              e.currentTarget.style.boxShadow = '0 12px 32px rgba(37,99,235,0.18)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = '#9DB2BF';
+              e.currentTarget.style.background = '#1e3a5f';
               e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 8px 24px rgba(157, 178, 191, 0.3)';
+              e.currentTarget.style.boxShadow = '0 8px 24px rgba(37,99,235,0.12)';
             }}
             onClick={() => {
               if (onGetStarted) {

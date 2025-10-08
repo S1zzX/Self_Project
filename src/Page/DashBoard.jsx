@@ -51,7 +51,7 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
   return (
     <div className="flex justify-center items-center gap-2 my-8 mb-6 flex-wrap">
       <button
-        className="min-w-[40px] h-10 flex items-center justify-center border-2 border-gray-200 bg-white text-[#9BADBF] rounded-lg cursor-pointer text-sm font-semibold transition-all duration-200 px-2 hover:border-[#9BADBF] hover:bg-[#9BADBF]/10 hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-slate-400 disabled:hover:transform-none disabled:hover:border-gray-200 disabled:hover:bg-gray-50"
+        className="min-w-[40px] h-10 flex items-center justify-center border-2 border-gray-200 bg-white text-[#2563eb] rounded-lg cursor-pointer text-sm font-semibold transition-all duration-200 px-2 hover:border-[#2563eb] hover:bg-[#2563eb]/10 hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-slate-400 disabled:hover:transform-none disabled:hover:border-gray-200 disabled:hover:bg-gray-50"
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
       >
@@ -63,10 +63,10 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
           key={idx}
           className={`min-w-[40px] h-10 flex items-center justify-center border-2 rounded-lg cursor-pointer text-sm font-semibold transition-all duration-200 px-2 ${
           page === currentPage
-            ? 'bg-[#9BADBF] border-[#9BADBF] text-white shadow-[0_4px_8px_rgba(82,109,130,0.3)]'
+            ? 'bg-[#2563eb] border-[#2563eb] text-white shadow-[0_4px_8px_rgba(37,99,235,0.18)]'
               : page === '...' 
               ? 'border-gray-200 bg-white text-slate-500 cursor-default' 
-              : 'border-gray-200 bg-white text-[#9BADBF] hover:border-[#9BADBF] hover:bg-[#9BADBF]/10 hover:-translate-y-px'
+              : 'border-gray-200 bg-white text-[#2563eb] hover:border-[#2563eb] hover:bg-[#2563eb]/10 hover:-translate-y-px'
           }`}
           onClick={() => typeof page === 'number' && onPageChange(page)}
           disabled={page === '...'}
@@ -76,7 +76,7 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
       ))}
 
       <button
-        className="min-w-[40px] h-10 flex items-center justify-center border-2 border-gray-200 bg-white text-[#9BADBF] rounded-lg cursor-pointer text-sm font-semibold transition-all duration-200 px-2 hover:border-[#9BADBF] hover:bg-[#9BADBF]/10 hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-slate-400 disabled:hover:transform-none disabled:hover:border-gray-200 disabled:hover:bg-gray-50"
+        className="min-w-[40px] h-10 flex items-center justify-center border-2 border-gray-200 bg-white text-[#2563eb] rounded-lg cursor-pointer text-sm font-semibold transition-all duration-200 px-2 hover:border-[#2563eb] hover:bg-[#2563eb]/10 hover:-translate-y-px disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-slate-400 disabled:hover:transform-none disabled:hover:border-gray-200 disabled:hover:bg-gray-50"
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
       >
@@ -213,10 +213,10 @@ function TaskProgressBar({ progress, onProgressChange, disabled = false }) {
   };
 
   return (
-    <div className="mt-3 p-3 bg-slate-200/10 rounded-lg border border-[#9BADBF]/20">
+    <div className="mt-3 p-3 bg-slate-200/10 rounded-lg border border-[#2563eb]/20">
       <div className="flex justify-between mb-2 text-xs font-semibold">
         <span className="text-slate-500 uppercase tracking-wider">Progress</span>
-        <span className="text-[#9BADBF] font-bold">{Math.round(localProgress)}%</span>
+        <span className="text-[#2563eb] font-bold">{Math.round(localProgress)}%</span>
       </div>
       <div 
         ref={progressRef}
@@ -228,13 +228,13 @@ function TaskProgressBar({ progress, onProgressChange, disabled = false }) {
         title={disabled ? "Task is overdue - Contact admin to modify" : "Drag to update progress"}
       >
         <div 
-          className="h-full bg-[#9BADBF] rounded-full transition-[width] duration-[50ms] linear relative"
+          className="h-full bg-[#2563eb] rounded-full transition-[width] duration-[50ms] linear relative"
           style={{ width: `${localProgress}%` }}
         />
         <div 
-          className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-[#9BADBF] rounded-full shadow-md z-10 transition-all duration-200 ${
-            disabled ? 'cursor-not-allowed opacity-50' : 'cursor-grab hover:scale-110 hover:border-[#9BADBF] hover:shadow-lg active:cursor-grabbing active:scale-90'
-          }`}
+          className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-[#2563eb] rounded-full shadow-md z-10 transition-all duration-200 ${
+             disabled ? 'cursor-not-allowed opacity-50' : 'cursor-grab hover:scale-110 hover:border-[#2563eb] hover:shadow-lg active:cursor-grabbing active:scale-90'
+           }`}
           style={{ left: `calc(${localProgress}% - 8px)` }}
         />
         {disabled && (
@@ -243,7 +243,7 @@ function TaskProgressBar({ progress, onProgressChange, disabled = false }) {
           </div>
         )}
       </div>
-      <div className="text-center text-[11px] font-semibold text-[#9BADBF] uppercase tracking-wider">
+      <div className="text-center text-[11px] font-semibold text-[#2563eb] uppercase tracking-wider">
         {getStatusFromProgress(localProgress)}
       </div>
     </div>
@@ -269,7 +269,7 @@ function AssigneeDropdown({ value, onChange, options, getMemberNameById, hasErro
     <div className="relative min-w-[120px]" ref={ref}>
       <div
         className={`bg-white border-2 rounded-lg p-3 text-base select-none transition-all duration-200 cursor-pointer ${
-          hasError ? 'border-red-600' : 'border-gray-200 hover:border-[#9BADBF]'
+          hasError ? 'border-red-600' : 'border-gray-200 hover:border-[#2563eb]'
         }`}
         onClick={() => setOpen(o => !o)}
       >
@@ -279,9 +279,9 @@ function AssigneeDropdown({ value, onChange, options, getMemberNameById, hasErro
         <span className="float-right font-bold">▼</span>
       </div>
       {open && (
-        <div className="absolute top-[110%] left-0 bg-white/95 border-2 border-[#9BADBF]/20 rounded-lg shadow-[0_8px_24px_rgba(39,55,77,0.2)] z-10 min-w-[120px] py-2 backdrop-blur-[10px]">
+        <div className="absolute top-[110%] left-0 bg-white/95 border-2 border-[#2563eb]/20 rounded-lg shadow-[0_8px_24px_rgba(37,99,235,0.12)] z-10 min-w-[120px] py-2 backdrop-blur-[10px]">
           {options.map(member => (
-            <label key={member.id} className="flex items-center px-4 py-2 text-[15px] cursor-pointer transition-colors duration-200 text-[#9BADBF] hover:bg-[#9BADBF]/10">
+            <label key={member.id} className="flex items-center px-4 py-2 text-[15px] cursor-pointer transition-colors duration-200 text-[#2563eb] hover:bg-[#2563eb]/10">
               <input
                 type="checkbox"
                 checked={value.includes(member.id)}
@@ -292,9 +292,9 @@ function AssigneeDropdown({ value, onChange, options, getMemberNameById, hasErro
                     onChange(value.filter(id => id !== member.id));
                   }
                 }}
-                className="mr-2 accent-[#9BADBF]"
+                className="mr-2 accent-[#2563eb]"
               />
-              <span className={value.includes(member.id) ? 'font-bold text-[#9BADBF]' : ''}>{member.name}</span>
+              <span className={value.includes(member.id) ? 'font-bold text-[#2563eb]' : ''}>{member.name}</span>
             </label>
           ))}
         </div>
@@ -354,8 +354,8 @@ function FilterModal({
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1000] backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]" onClick={onClose}>
       <div className="bg-white rounded-2xl p-6 max-w-[500px] w-[90%] shadow-[0_20px_60px_rgba(0,0,0,0.3)] animate-[slideIn_0.3s_ease-out]" onClick={e => e.stopPropagation()}>
-        <div className="flex justify-between items-start mb-5 pb-4 border-b-2 border-[#9BADBF]/10">
-          <h2 className="text-2xl font-bold text-[#9BADBF] m-0 flex-1 mr-4 leading-tight">Filter Tasks</h2>
+        <div className="flex justify-between items-start mb-5 pb-4 border-b-2 border-[#2563eb]/10">
+          <h2 className="text-2xl font-bold text-[#2563eb] m-0 flex-1 mr-4 leading-tight">Filter Tasks</h2>
           <button className="bg-transparent border-none text-2xl text-slate-500 cursor-pointer p-2 rounded-lg transition-all duration-200 flex items-center justify-center hover:bg-red-600/10 hover:text-red-600" onClick={onClose}>
             <X size={20} />
           </button>
@@ -363,11 +363,11 @@ function FilterModal({
 
         <div className="flex flex-col gap-5 my-5">
           <div className="flex flex-col gap-2">
-            <label className="font-semibold text-[#9BADBF] text-sm uppercase tracking-wide">Status</label>
+            <label className="font-semibold text-[#2563eb] text-sm uppercase tracking-wide">Status</label>
             <select
               value={tempFilter}
               onChange={e => setTempFilter(e.target.value)}
-              className="p-3 px-4 rounded-lg border-2 border-gray-200 bg-white text-sm text-[#9BADBF] outline-none transition-all duration-200 cursor-pointer focus:border-[#9BADBF] focus:shadow-[0_0_0_2px_rgba(82,109,130,0.2)]"
+              className="p-3 px-4 rounded-lg border-2 border-gray-200 bg-white text-sm text-[#2563eb] outline-none transition-all duration-200 cursor-pointer focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]"
             >
               <option value="All">All Status</option>
               {STATUSES.map(s => (
@@ -377,11 +377,11 @@ function FilterModal({
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="font-semibold text-[#9BADBF] text-sm uppercase tracking-wide">Priority</label>
+            <label className="font-semibold text-[#2563eb] text-sm uppercase tracking-wide">Priority</label>
             <select
               value={tempPriorityFilter}
               onChange={e => setTempPriorityFilter(e.target.value)}
-              className="p-3 px-4 rounded-lg border-2 border-gray-200 bg-white text-sm text-[#9BADBF] outline-none transition-all duration-200 cursor-pointer focus:border-[#9BADBF] focus:shadow-[0_0_0_2px_rgba(82,109,130,0.2)]"
+              className="p-3 px-4 rounded-lg border-2 border-gray-200 bg-white text-sm text-[#2563eb] outline-none transition-all duration-200 cursor-pointer focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]"
             >
               <option value="All">All Priorities</option>
               {PRIORITIES.map(p => (
@@ -391,11 +391,11 @@ function FilterModal({
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="font-semibold text-[#9BADBF] text-sm uppercase tracking-wide">Assignee</label>
+            <label className="font-semibold text-[#2563eb] text-sm uppercase tracking-wide">Assignee</label>
             <select
               value={tempAssigneeFilter}
               onChange={e => setTempAssigneeFilter(e.target.value)}
-              className="p-3 px-4 rounded-lg border-2 border-gray-200 bg-white text-sm text-[#9BADBF] outline-none transition-all duration-200 cursor-pointer focus:border-[#9BADBF] focus:shadow-[0_0_0_2px_rgba(82,109,130,0.2)]"
+              className="p-3 px-4 rounded-lg border-2 border-gray-200 bg-white text-sm text-[#2563eb] outline-none transition-all duration-200 cursor-pointer focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]"
             >
               <option value="All">All Assignees</option>
               {users.map(u => (
@@ -405,11 +405,11 @@ function FilterModal({
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="font-semibold text-[#9BADBF] text-sm uppercase tracking-wide">Deadline</label>
+            <label className="font-semibold text-[#2563eb] text-sm uppercase tracking-wide">Deadline</label>
             <select
               value={tempDeadlineFilter}
               onChange={e => setTempDeadlineFilter(e.target.value)}
-              className="p-3 px-4 rounded-lg border-2 border-gray-200 bg-white text-sm text-[#9BADBF] outline-none transition-all duration-200 cursor-pointer focus:border-[#9BADBF] focus:shadow-[0_0_0_2px_rgba(82,109,130,0.2)]"
+              className="p-3 px-4 rounded-lg border-2 border-gray-200 bg-white text-sm text-[#2563eb] outline-none transition-all duration-200 cursor-pointer focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]"
             >
               <option value="All">All Dates</option>
               <option value="Overdue">Overdue</option>
@@ -419,7 +419,7 @@ function FilterModal({
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 mt-5 pt-5 border-t-2 border-[#9BADBF]/10">
+        <div className="flex justify-end gap-3 mt-5 pt-5 border-t-2 border-[#2563eb]/10">
           {hasActiveFilters && (
             <button 
               className="px-5 py-2.5 bg-red-600/10 text-red-600 border-2 border-red-600/20 rounded-lg cursor-pointer text-sm font-semibold transition-all duration-200 hover:bg-red-600/20 hover:border-red-600"
@@ -429,7 +429,7 @@ function FilterModal({
             </button>
           )}
           <button 
-            className="px-6 py-2.5 bg-[#9BADBF] text-white border-none rounded-lg cursor-pointer text-sm font-semibold transition-all duration-200 shadow-[0_2px_6px_rgba(82,109,130,0.3)] hover:bg-[#9BADBF] hover:-translate-y-px hover:shadow-[0_4px_10px_rgba(82,109,130,0.4)]"
+            className="px-6 py-2.5 bg-[#2563eb] text-white border-none rounded-lg cursor-pointer text-sm font-semibold transition-all duration-200 shadow-[0_2px_6px_rgba(37,99,235,0.12)] hover:bg-[#2563eb] hover:-translate-y-px hover:shadow-[0_4px_10px_rgba(37,99,235,0.18)]"
             onClick={applyFilters}
           >
             Apply Filters
@@ -593,9 +593,9 @@ function TaskDetailsModal({
   };
 
   const getStatusClass = (status, completed) => {
-    if (completed) return 'bg-[#9BADBF]/10 text-[#9BADBF] font-semibold';
+    if (completed) return 'bg-[#2563eb]/10 text-[#2563eb] font-semibold';
     switch (status?.toLowerCase()) {
-      case 'in progress': return 'bg-[#9BADBF]/10 text-[#9BADBF] font-semibold';
+      case 'in progress': return 'bg-[#2563eb]/10 text-[#2563eb] font-semibold';
       case 'to do': return 'bg-amber-500/10 text-amber-600 font-semibold';
       default: return 'bg-amber-500/10 text-amber-600 font-semibold';
     }
@@ -604,15 +604,15 @@ function TaskDetailsModal({
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1000] backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]" onClick={onClose}>
       <div className="bg-white rounded-2xl p-8 max-w-[600px] w-[90%] max-h-[80vh] overflow-y-auto shadow-[0_20px_60px_rgba(0,0,0,0.3)] animate-[slideIn_0.3s_ease-out] relative [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden" onClick={e => e.stopPropagation()}>
-        <div className="flex justify-between items-start mb-6 pb-4 border-b-2 border-[#9BADBF]/10">
-          <h2 className="text-2xl font-bold text-[#9BADBF] m-0 flex-1 mr-4 leading-tight">
+        <div className="flex justify-between items-start mb-6 pb-4 border-b-2 border-[#2563eb]/10">
+          <h2 className="text-2xl font-bold text-[#2563eb] m-0 flex-1 mr-4 leading-tight">
             {isEditing ? (
               <div className="w-full">
                 <input
                   type="text"
                   value={editingTask.text}
                   onChange={e => setEditingTask({ ...editingTask, text: e.target.value })}
-                  className="w-full p-1 px-2 border-2 border-gray-200 rounded text-2xl font-bold m-0 outline-none transition-all duration-200 focus:border-[#9BADBF] focus:shadow-[0_0_0_2px_rgba(82,109,130,0.2)]"
+                  className="w-full p-1 px-2 border-2 border-gray-200 rounded text-2xl font-bold m-0 outline-none transition-all duration-200 focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]"
                   autoFocus
                 />
                 {modalErrors.text && <span className="text-red-600 text-xs mt-1 block">{modalErrors.text}</span>}
@@ -629,19 +629,19 @@ function TaskDetailsModal({
         <div className="grid gap-5">
           {/* Description */}
           <div className="flex flex-col gap-2">
-            <div className="font-semibold text-[#9BADBF] text-sm uppercase tracking-wide">Description</div>
+            <div className="font-semibold text-[#2563eb] text-sm uppercase tracking-wide">Description</div>
             {isEditing ? (
               <>
                 <textarea
                   value={editingTask.description}
                   onChange={e => setEditingTask({ ...editingTask, description: e.target.value })}
-                  className="min-h-[80px] resize-y p-1 px-2 border-2 border-gray-200 rounded text-base outline-none transition-all duration-200 focus:border-[#9BADBF] focus:shadow-[0_0_0_2px_rgba(82,109,130,0.2)]"
+                  className="min-h-[80px] resize-y p-1 px-2 border-2 border-gray-200 rounded text-base outline-none transition-all duration-200 focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]"
                   placeholder="Task description..."
                 />
                 {modalErrors.description && <span className="text-red-600 text-xs mt-1 block">{modalErrors.description}</span>}
               </>
             ) : (
-              <div className="p-3 px-4 bg-slate-200/10 border-2 border-[#9BADBF]/10 rounded-lg text-slate-500 text-base leading-normal min-h-[20px] whitespace-pre-wrap">
+              <div className="p-3 px-4 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-lg text-[#64748b] text-base leading-normal min-h-[20px] whitespace-pre-wrap">
                 {task.description || 'No description provided'}
               </div>
             )}
@@ -649,7 +649,7 @@ function TaskDetailsModal({
 
           {/* Assignees */}
           <div className="flex flex-col gap-2">
-            <div className="font-semibold text-[#9BADBF] text-sm uppercase tracking-wide">Assigned To</div>
+            <div className="font-semibold text-[#2563eb] text-sm uppercase tracking-wide">Assigned To</div>
             {isEditing ? (
               <>
                 <AssigneeDropdown
@@ -662,11 +662,11 @@ function TaskDetailsModal({
                 {modalErrors.assignee && <span className="text-red-600 text-xs mt-1 block">{modalErrors.assignee}</span>}
               </>
             ) : (
-              <div className="p-3 px-4 bg-slate-200/10 border-2 border-[#9BADBF]/10 rounded-lg text-slate-500 text-base leading-normal min-h-[20px]">
+              <div className="p-3 px-4 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-lg text-[#64748b] text-base leading-normal min-h-[20px]">
                 {Array.isArray(task.assignees) && task.assignees.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {(task.assigneeNames || task.assignees.map(id => getMemberNameById(id, task))).map((name, index) => (
-                      <span key={index} className="bg-[#9BADBF] text-white px-3 py-1.5 rounded-2xl text-sm font-medium">
+                      <span key={index} className="bg-[#2563eb] text-white px-3 py-1.5 rounded-2xl text-sm font-medium">
                         {name}
                       </span>
                     ))}
@@ -680,20 +680,20 @@ function TaskDetailsModal({
 
           {/* Deadline */}
           <div className="flex flex-col gap-2">
-            <div className="font-semibold text-[#9BADBF] text-sm uppercase tracking-wide">Deadline</div>
+            <div className="font-semibold text-[#2563eb] text-sm uppercase tracking-wide">Deadline</div>
             {isEditing ? (
               <>
                 <input
                   type="date"
                   value={editingTask.deadline}
                   onChange={e => setEditingTask({ ...editingTask, deadline: e.target.value })}
-                  className="p-1 px-2 border-2 border-gray-200 rounded text-base outline-none transition-all duration-200 focus:border-[#9BADBF] focus:shadow-[0_0_0_2px_rgba(82,109,130,0.2)]"
+                  className="p-1 px-2 border-2 border-gray-200 rounded text-base outline-none transition-all duration-200 focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]"
                   min={new Date().toISOString().split('T')[0]}
                 />
                 {modalErrors.deadline && <span className="text-red-600 text-xs mt-1 block">{modalErrors.deadline}</span>}
               </>
             ) : (
-              <div className="p-3 px-4 bg-slate-200/10 border-2 border-[#9BADBF]/10 rounded-lg text-slate-500 text-base leading-normal min-h-[20px]">
+              <div className="p-3 px-4 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-lg text-[#64748b] text-base leading-normal min-h-[20px]">
                 {formatDate(task.deadline)}
                 {task.deadline && (() => {
                   const deadlineDate = new Date(task.deadline);
@@ -710,17 +710,17 @@ function TaskDetailsModal({
 
           {/* Status */}
           <div className="flex flex-col gap-2">
-            <div className="font-semibold text-[#9BADBF] text-sm uppercase tracking-wide">Status</div>
+            <div className="font-semibold text-[#2563eb] text-sm uppercase tracking-wide">Status</div>
             {isEditing ? (
               <select
                 value={editingTask.status}
                 onChange={e => setEditingTask({ ...editingTask, status: e.target.value })}
-                className="p-1 px-2 border-2 border-gray-200 rounded text-base outline-none transition-all duration-200 focus:border-[#9BADBF] focus:shadow-[0_0_0_2px_rgba(82,109,130,0.2)]"
+                className="p-1 px-2 border-2 border-gray-200 rounded text-base outline-none transition-all duration-200 focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]"
               >
                 {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             ) : (
-              <div className={`p-3 px-4 border-2 border-[#9BADBF]/10 rounded-lg text-base leading-normal min-h-[20px] ${getStatusClass(task.status, task.completed)}`}>
+              <div className={`p-3 px-4 border-2 border-[#2563eb]/10 rounded-lg text-base leading-normal min-h-[20px] ${getStatusClass(task.status, task.completed)}`}>
                 {task.completed ? 'Completed ✓' : task.status || 'To Do'}
               </div>
             )}
@@ -728,17 +728,17 @@ function TaskDetailsModal({
 
           {/* Priority */}
           <div className="flex flex-col gap-2">
-            <div className="font-semibold text-[#9BADBF] text-sm uppercase tracking-wide">Priority</div>
+            <div className="font-semibold text-[#2563eb] text-sm uppercase tracking-wide">Priority</div>
             {isEditing ? (
               <select
                 value={editingTask.priority}
                 onChange={e => setEditingTask({ ...editingTask, priority: e.target.value })}
-                className="p-1 px-2 border-2 border-gray-200 rounded text-base outline-none transition-all duration-200 focus:border-[#9BADBF] focus:shadow-[0_0_0_2px_rgba(82,109,130,0.2)]"
+                className="p-1 px-2 border-2 border-gray-200 rounded text-base outline-none transition-all duration-200 focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]"
               >
                 {PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
               </select>
             ) : (
-              <div className="p-3 px-4 bg-slate-200/10 border-2 border-[#9BADBF]/10 rounded-lg text-slate-500 text-base leading-normal min-h-[20px]">
+              <div className="p-3 px-4 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-lg text-[#64748b] text-base leading-normal min-h-[20px]">
                 <span className={`inline-block px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide border ${getPriorityClass(task.priority)}`}>
                   {task.priority || 'Medium'}
                 </span>
@@ -748,9 +748,9 @@ function TaskDetailsModal({
 
           {/* Progress */}
           <div className="flex flex-col gap-2">
-            <div className="font-semibold text-[#9BADBF] text-sm uppercase tracking-wide">Progress</div>
+            <div className="font-semibold text-[#2563eb] text-sm uppercase tracking-wide">Progress</div>
             {isEditing ? (
-              <div className="p-3 px-4 bg-slate-200/10 border-2 border-[#9BADBF]/10 rounded-lg text-slate-500 text-base leading-normal min-h-[20px]">
+              <div className="p-3 px-4 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-lg text-[#64748b] text-base leading-normal min-h-[20px]">
                 <TaskProgressBar 
                   progress={editingTask.progress || 0}
                   onProgressChange={(newProgress) => {
@@ -770,7 +770,7 @@ function TaskDetailsModal({
                 />
               </div>
             ) : (
-              <div className="p-3 px-4 bg-slate-200/10 border-2 border-[#9BADBF]/10 rounded-lg text-slate-500 text-base leading-normal min-h-[20px]">
+              <div className="p-3 px-4 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-lg text-[#64748b] text-base leading-normal min-h-[20px]">
                 <TaskProgressBar 
                   progress={task.progress || 0}
                   onProgressChange={updateTaskProgressInModal}
@@ -788,8 +788,8 @@ function TaskDetailsModal({
 
           {/* Task ID */}
           <div className="flex flex-col gap-2">
-            <div className="font-semibold text-[#9BADBF] text-sm uppercase tracking-wide">Task ID</div>
-            <div className="p-3 px-4 bg-slate-200/10 border-2 border-[#9BADBF]/10 rounded-lg text-slate-500 text-base leading-normal min-h-[20px]">
+            <div className="font-semibold text-[#2563eb] text-sm uppercase tracking-wide">Task ID</div>
+            <div className="p-3 px-4 bg-slate-200/10 border-2 border-[#2563eb]/10 rounded-lg text-slate-500 text-base leading-normal min-h-[20px]">
               #{task.id}
             </div>
           </div>
@@ -797,22 +797,22 @@ function TaskDetailsModal({
 
         {/* Footer */}
         {isAdmin && (
-          <div className="flex justify-end gap-3 mt-8 pt-5 border-t-2 border-[#9BADBF]/10">
+          <div className="flex justify-end gap-3 mt-8 pt-5 border-t-2 border-[#2563eb]/10">
             {isEditing ? (
               <>
-                <button className="px-6 py-3 bg-slate-200/30 text-slate-600 border-2 border-slate-200/50 rounded-lg cursor-pointer text-base font-semibold transition-all duration-200 flex items-center gap-2 hover:bg-slate-200/50 hover:border-[#9BADBF] hover:text-[#9BADBF]" onClick={cancelEdit}>
+                <button className="px-6 py-3 bg-[#f1f5f9] text-[#1e293b] border-2 border-[#e2e8f0] rounded-lg cursor-pointer text-base font-semibold transition-all duration-200 flex items-center gap-2 hover:bg-[#e8eef9] hover:border-[#2563eb] hover:text-white" onClick={cancelEdit}>
                   <X size={16} />Cancel
                 </button>
-                <button className="px-6 py-3 bg-[#9BADBF] text-white border-none rounded-lg cursor-pointer text-base font-semibold transition-all duration-200 shadow-[0_4px_12px_rgba(82,109,130,0.3)] flex items-center gap-2 hover:bg-[#9BADBF] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(82,109,130,0.4)]" onClick={saveModalEdit}>
+                <button className="px-6 py-3 bg-[#2563eb] text-white border-none rounded-lg cursor-pointer text-base font-semibold transition-all duration-200 shadow-[0_4px_12px_rgba(37,99,235,0.12)] flex items-center gap-2 hover:bg-[#2563eb] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(37,99,235,0.18)]" onClick={saveModalEdit}>
                   <Check size={16} />Save Changes
                 </button>
               </>
             ) : (
               <>
-                <button className="px-6 py-3 bg-slate-200/30 text-slate-600 border-2 border-slate-200/50 rounded-lg cursor-pointer text-base font-semibold transition-all duration-200 hover:bg-slate-200/50 hover:border-[#9BADBF] hover:text-[#9BADBF]" onClick={onClose}>
+                <button className="px-6 py-3 bg-[#f1f5f9] text-[#1e293b] border-2 border-[#e2e8f0] rounded-lg cursor-pointer text-base font-semibold transition-all duration-200 hover:bg-[#e8eef9] hover:border-[#2563eb] hover:text-white" onClick={onClose}>
                   Close
                 </button>
-                <button className="px-6 py-3 bg-[#9BADBF] text-white border-none rounded-lg cursor-pointer text-base font-semibold transition-all duration-200 shadow-[0_4px_12px_rgba(82,109,130,0.3)] flex items-center gap-2 hover:bg-[#9BADBF] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(82,109,130,0.4)]" onClick={enterEditMode}>
+                <button className="px-6 py-3 bg-[#2563eb] text-white border-none rounded-lg cursor-pointer text-base font-semibold transition-all duration-200 shadow-[0_4px_12px_rgba(37,99,235,0.12)] flex items-center gap-2 hover:bg-[#2563eb] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(37,99,235,0.18)]" onClick={enterEditMode}>
                   <Edit2 size={16} />Edit
                 </button>
                 <button
@@ -831,8 +831,8 @@ function TaskDetailsModal({
           </div>
         )}
         {!isAdmin && (
-          <div className="flex justify-end gap-3 mt-8 pt-5 border-t-2 border-[#9BADBF]/10">
-            <button className="px-6 py-3 bg-slate-200/30 text-slate-600 border-2 border-slate-200/50 rounded-lg cursor-pointer text-base font-semibold transition-all duration-200 hover:bg-slate-200/50 hover:border-[#9BADBF] hover:text-[#9BADBF]" onClick={onClose}>
+          <div className="flex justify-end gap-3 mt-8 pt-5 border-t-2 border-[#2563eb]/10">
+            <button className="px-6 py-3 bg-[#f1f5f9] text-[#1e293b] border-2 border-[#e2e8f0] rounded-lg cursor-pointer text-base font-semibold transition-all duration-200 hover:bg-[#e8eef9] hover:border-[#2563eb] hover:text-white" onClick={onClose}>
               Close
             </button>
           </div>
@@ -1364,7 +1364,7 @@ export default function TaskManager({ user }) {
   return (
     <div className="max-w-full mx-auto p-6 bg-white/95 min-h-screen font-sans">
       {/* Header */}
-      <div className="bg-[#9BADBF] rounded-xl p-6 text-white mb-8 shadow-[0_8px_24px_rgba(39,55,77,0.3)]">  
+      <div className="bg-[#2563eb] rounded-xl p-6 text-white mb-8 shadow-[0_8px_24px_rgba(37,99,235,0.18)]">  
         <h2 className="font-normal text-3xl my-2 text-white">Welcome back, {user?.name || 'User'}!</h2>
         <p className="opacity-90 m-0 text-white">
           {totalTasks === 0
@@ -1392,7 +1392,7 @@ export default function TaskManager({ user }) {
 
       {/* Add Task Form */}
       {isAdmin && (
-        <div className="flex gap-2 mb-6 justify-center flex-wrap bg-[#9BADBF]/10 p-5 rounded-xl border-2 border-[#9BADBF]/20">
+        <div className="flex gap-2 mb-6 justify-center flex-wrap bg-[#2563eb]/10 p-5 rounded-xl border-2 border-[#2563eb]/20">
           <div className="flex-1 min-w-[250px]">
             <input
               type="text"
@@ -1401,7 +1401,7 @@ export default function TaskManager({ user }) {
               placeholder="Task title..."
               maxLength={100}
               className={`w-full p-3 px-4 border-2 rounded-lg text-base outline-none transition-all duration-200 bg-white ${
-                formErrors.text ? 'border-red-600 shadow-[0_0_0_2px_rgba(220,38,38,0.2)]' : 'border-gray-200 focus:border-[#9BADBF] focus:shadow-[0_0_0_2px_rgba(82,109,130,0.2)]'
+                formErrors.text ? 'border-red-600 shadow-[0_0_0_2px_rgba(220,38,38,0.2)]' : 'border-gray-200 focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]'
               }`}
             />
             {formErrors.text && <span className="text-red-600 text-xs mt-1 block">{formErrors.text}</span>}
@@ -1416,7 +1416,7 @@ export default function TaskManager({ user }) {
               placeholder="Description"
               maxLength={500}
               className={`w-full p-3 px-4 border-2 rounded-lg text-base outline-none transition-all duration-200 bg-white ${
-                formErrors.description ? 'border-red-600 shadow-[0_0_0_2px_rgba(220,38,38,0.2)]' : 'border-gray-200 focus:border-[#9BADBF] focus:shadow-[0_0_0_2px_rgba(82,109,130,0.2)]'
+                formErrors.description ? 'border-red-600 shadow-[0_0_0_2px_rgba(220,38,38,0.2)]' : 'border-gray-200 focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]'
               }`}
             />
             {formErrors.description && <span className="text-red-600 text-xs mt-1 block">{formErrors.description}</span>}
@@ -1439,8 +1439,8 @@ export default function TaskManager({ user }) {
               type="date"
               value={newTask.deadline}
               onChange={e => setNewTask({ ...newTask, deadline: e.target.value })}
-              className={`p-3 px-4 border-2 rounded-lg text-base outline-none transition-all duration-200 bg-white text-[#9BADBF] min-w-[120px] h-[46px] ${
-                formErrors.deadline ? 'border-red-600 shadow-[0_0_0_2px_rgba(220,38,38,0.2)]' : 'border-gray-200 focus:border-[#9BADBF] focus:shadow-[0_0_0_2px_rgba(82,109,130,0.2)]'
+              className={`p-3 px-4 border-2 rounded-lg text-base outline-none transition-all duration-200 bg-white text-[#2563eb] min-w-[120px] h-[46px] ${
+                formErrors.deadline ? 'border-red-600 shadow-[0_0_0_2px_rgba(220,38,38,0.2)]' : 'border-gray-200 focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]'
               }`}
               min={new Date().toISOString().split('T')[0]}
             />
@@ -1450,7 +1450,7 @@ export default function TaskManager({ user }) {
           <select
             value={newTask.priority}
             onChange={e => setNewTask({ ...newTask, priority: e.target.value })}
-            className="p-3 px-4 border-2 border-gray-200 rounded-lg text-base outline-none transition-all duration-200 bg-white focus:border-[#9BADBF] focus:shadow-[0_0_0_2px_rgba(82,109,130,0.2)]"
+            className="p-3 px-4 border-2 border-gray-200 rounded-lg text-base outline-none transition-all duration-200 bg-white focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]"
           >
             {PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
@@ -1458,12 +1458,12 @@ export default function TaskManager({ user }) {
           <select
             value={newTask.status}
             onChange={e => setNewTask({ ...newTask, status: e.target.value })}
-            className="p-3 px-4 border-2 border-gray-200 rounded-lg text-base outline-none transition-all duration-200 bg-white focus:border-[#9BADBF] focus:shadow-[0_0_0_2px_rgba(82,109,130,0.2)]"
+            className="p-3 px-4 border-2 border-gray-200 rounded-lg text-base outline-none transition-all duration-200 bg-white focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]"
           >
             {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
 
-          <button onClick={addTask} className="px-5 py-3 bg-[#9BADBF] text-white border-none rounded-lg cursor-pointer flex items-center gap-2 text-base font-semibold transition-all duration-200 shadow-[0_4px_8px_rgba(82,109,130,0.3)] hover:bg-[#9BADBF] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(82,109,130,0.4)]">
+          <button onClick={addTask} className="px-5 py-3 bg-[#2563eb] text-white border-none rounded-lg cursor-pointer flex items-center gap-2 text-base font-semibold transition-all duration-200 shadow-[0_4px_8px_rgba(37,99,235,0.12)] hover:bg-[#2563eb] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(37,99,235,0.18)]">
             <Plus size={20} /> Add
           </button>
         </div>
@@ -1471,9 +1471,9 @@ export default function TaskManager({ user }) {
 
       {/* Bulk Actions Bar */}
       {filteredTasks.length > 0 && (
-        <div className="flex justify-between items-center px-5 py-4 bg-gradient-to-br from-[#9BADBF]/5 to-[#9BADBF]/5 rounded-xl border-2 border-[#9BADBF]/20 gap-4 flex-wrap mb-4">
+        <div className="flex justify-between items-center px-5 py-4 bg-gradient-to-br from-[#2563eb]/5 to-[#2563eb]/5 rounded-xl border-2 border-[#2563eb]/20 gap-4 flex-wrap mb-4">
           <div className="flex items-center gap-3">
-            <label className="flex items-center gap-2 cursor-pointer select-none font-semibold text-[#9BADBF]">
+            <label className="flex items-center gap-2 cursor-pointer select-none font-semibold text-[#2563eb]">
               <input
                 type="checkbox"
                 checked={selectedTaskIds.length > 0 && selectedTaskIds.length === filteredTasks.length}
@@ -1485,7 +1485,7 @@ export default function TaskManager({ user }) {
                   }
                 }}
                 onChange={toggleSelectAll}
-                className="w-5 h-5 cursor-pointer accent-[#9BADBF]"
+                className="w-5 h-5 cursor-pointer accent-[#2563eb]"
               />
               Select All ({selectedTaskIds.length} selected)
             </label>
@@ -1508,7 +1508,7 @@ export default function TaskManager({ user }) {
                 </div>
               ) : (
                 <div className="flex gap-3 flex-wrap items-center">
-                  <span className="text-[#9BADBF] font-semibold text-sm">
+                  <span className="text-[#2563eb] font-semibold text-sm">
                     {showBulkConfirm === 'done' 
                       ? `Are you sure to mark ${selectedTaskIds.length} task(s) as done?`
                       : `Are you sure to delete ${selectedTaskIds.length} task(s)?`
@@ -1548,7 +1548,7 @@ export default function TaskManager({ user }) {
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search tasks by title..."
-            className="mt-2.5 w-full py-3.5 pr-[50px] pl-5 border-2 border-gray-200 rounded-xl text-base outline-none transition-all duration-300 bg-white shadow-[0_2px_8px_rgba(39,55,77,0.05)] focus:border-[#9BADBF] focus:shadow-[0_4px_16px_rgba(82,109,130,0.15)] focus:-translate-y-px"
+            className="mt-2.5 w-full py-3.5 pr-[50px] pl-5 border-2 border-gray-200 rounded-xl text-base outline-none transition-all duration-300 bg-white shadow-[0_2px_8px_rgba(39,55,77,0.05)] focus:border-[#2563eb] focus:shadow-[0_4px_16px_rgba(37,99,235,0.15)] focus:-translate-y-px"
           />
           {searchQuery && (
             <button
@@ -1565,7 +1565,7 @@ export default function TaskManager({ user }) {
         <div className="flex justify-center items-center gap-6 flex-wrap">
           <button 
             onClick={() => setShowFilterModal(true)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[#9BADBF] text-white border-none rounded-lg cursor-pointer text-sm font-semibold transition-all duration-200 shadow-[0_2px_6px_rgba(39,55,77,0.3)] hover:bg-[#9BADBF] hover:-translate-y-px hover:shadow-[0_4px_10px_rgba(82,109,130,0.4)]"
+            className="flex items-center gap-2 px-5 py-2.5 bg-[#2563eb] text-white border-none rounded-lg cursor-pointer text-sm font-semibold transition-all duration-200 shadow-[0_2px_6px_rgba(37,99,235,0.12)] hover:bg-[#2563eb] hover:-translate-y-px hover:shadow-[0_4px_10px_rgba(37,99,235,0.18)]"
           >
             Filters
             {(filter !== 'All' || priorityFilter !== 'All' || 
@@ -1575,11 +1575,11 @@ export default function TaskManager({ user }) {
           </button>
 
           <div className="flex items-center gap-2 whitespace-nowrap">
-            <label className="font-semibold text-[#9BADBF] text-sm whitespace-nowrap min-w-fit">Per page:</label>
+            <label className="font-semibold text-[#2563eb] text-sm whitespace-nowrap min-w-fit">Per page:</label>
             <select
               value={itemsPerPage}
               onChange={e => handleItemsPerPageChange(Number(e.target.value))}
-              className="py-2.5 px-3.5 rounded-lg border-2 border-gray-200 bg-white text-sm text-[#9BADBF] outline-none transition-all duration-200 cursor-pointer min-w-[140px] font-medium focus:border-[#9BADBF] focus:shadow-[0_0_0_2px_rgba(82,109,130,0.2)] hover:border-[#9BADBF]"
+              className="py-2.5 px-3.5 rounded-lg border-2 border-gray-200 bg-white text-sm text-[#2563eb] outline-none transition-all duration-200 cursor-pointer min-w-[140px] font-medium focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)] hover:border-[#2563eb]"
             >
               {ITEMS_PER_PAGE_OPTIONS.map(num => (
                 <option key={num} value={num}>{num}</option>
@@ -1590,7 +1590,7 @@ export default function TaskManager({ user }) {
 
         {/* Search Results Info */}
         {searchQuery && (
-          <div className="text-center py-3 px-5 bg-gradient-to-br from-[#9BADBF]/10 to-[#9BADBF]/10 border border-[#9BADBF]/20 rounded-lg text-[#9BADBF] font-medium text-sm animate-[slideDown_0.3s_ease]">
+          <div className="text-center py-3 px-5 bg-gradient-to-br from-[#2563eb]/10 to-[#2563eb]/10 border border-[#2563eb]/20 rounded-lg text-[#2563eb] font-medium text-sm animate-[slideDown_0.3s_ease]">
             Found {filteredTasks.length} task{filteredTasks.length !== 1 ? 's' : ''} matching "{searchQuery}"
           </div>
         )}
@@ -1599,10 +1599,10 @@ export default function TaskManager({ user }) {
       {/* Task List */}
       <div className="flex flex-row flex-wrap gap-4 justify-start">
         {filteredTasks.length === 0 ? (
-          <div className="text-center py-12 px-6 text-slate-500 bg-slate-200/30 border-2 border-dashed border-[#9BADBF]/20 rounded-xl my-6 mx-auto w-full max-w-[600px]">
-            <div className="text-5xl mb-4 text-[#9BADBF]">📋</div>
-            <p className="text-lg mb-1 text-[#9BADBF] font-medium">No tasks found!</p>
-            <p className="text-sm text-slate-500 m-0">
+          <div className="text-center py-12 px-6 text-[#64748b] bg-[#f1f5f9] border-2 border-dashed rounded-xl my-6 mx-auto w-full max-w-[600px]" style={{ borderColor: 'rgba(226,232,240,0.8)' }}>
+            <div className="text-5xl mb-4 text-[#2563eb]">📋</div>
+            <p className="text-lg mb-1 text-[#2563eb] font-medium">No tasks found!</p>
+            <p className="text-sm text-[#64748b] m-0">
               {filter === 'All'
                 ? (isAdmin ? 'Add your first task above.' : 'No tasks assigned.')
                 : `No tasks with status "${filter}".`}
@@ -1622,8 +1622,8 @@ export default function TaskManager({ user }) {
             return (
               <div
                 key={task.id}
-                className={`relative flex items-center gap-3 p-4 border-2 border-[#9BADBF]/20 rounded-xl transition-all duration-200 bg-white/90 shadow-[0_4px_12px_rgba(39,55,77,0.1)] max-w-[400px] min-w-[300px] hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(39,55,77,0.2)] hover:border-[#9BADBF] ${
-                  task.completed ? 'bg-gradient-to-br from-[#9BADBF]/10 to-slate-200/20 border-[#9BADBF]' : ''
+                className={`relative flex items-center gap-3 p-4 border-2 border-[#2563eb]/20 rounded-xl transition-all duration-200 bg-white/90 shadow-[0_4px_12px_rgba(39,55,77,0.1)] max-w-[400px] min-w-[300px] hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(39,55,77,0.2)] hover:border-[#2563eb] ${
+                  task.completed ? 'bg-gradient-to-br from-[#2563eb] to-[#2563eb] border-[#2563eb] text-white' : ''
                 } ${editingId === task.id ? 'editing z-[9999]' : 'z-10'} ${selectedTaskIds.includes(task.id) ? 'selected' : ''} ${isOverdue && !isAdmin ? 'overdue' : ''} ${isAdmin && isOverdue ? 'overdue admin-view border-2 border-red-600 bg-red-600/5' : ''}`}
               >
                 {isOverdue && !isAdmin && (
@@ -1641,8 +1641,8 @@ export default function TaskManager({ user }) {
                 )}
                 <button
                   onClick={() => toggleComplete(task.id)}
-                  className={`w-6 h-6 rounded-full border-2 border-slate-500 bg-transparent cursor-pointer flex items-center justify-center transition-all duration-200 hover:border-[#9BADBF] ${
-                    task.completed ? 'bg-gradient-to-br from-[#9BADBF] to-[#9BADBF] border-[#9BADBF] text-white' : ''
+                  className={`w-6 h-6 rounded-full border-2 border-slate-500 bg-transparent cursor-pointer flex items-center justify-center transition-all duration-200 hover:border-[#2563eb] ${
+                    task.completed ? 'bg-gradient-to-br from-[#2563eb] to-[#2563eb] border-[#2563eb] text-white' : ''
                   } ${isOverdue && !isAdmin ? 'opacity-60 cursor-not-allowed' : ''}`}
                   disabled={isOverdue && !isAdmin}
                 >
@@ -1653,7 +1653,7 @@ export default function TaskManager({ user }) {
                   <div className="flex flex-col gap-2 pr-28">
                       <input
                         type="text"
-                        className={`w-full p-1 px-2 border-2 rounded text-base outline-none transition-all duration-200 ${editingErrors.text ? 'border-red-600' : 'border-gray-200 focus:border-[#9BADBF] focus:shadow-[0_0_0_2px_rgba(82,109,130,0.2)]'}`}
+                        className={`w-full p-1 px-2 border-2 rounded text-base outline-none transition-all duration-200 ${editingErrors.text ? 'border-red-600' : 'border-gray-200 focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]'}`}
                         value={editingTask?.text || ''}
                         onChange={e => setEditingTask({ ...editingTask, text: e.target.value })}
                         placeholder="Task title..."
@@ -1663,7 +1663,7 @@ export default function TaskManager({ user }) {
                       <span className="text-xs text-slate-400">{(editingTask?.text || '').length}/100</span>
 
                       <textarea
-                        className={`min-h-[60px] resize-y p-1 px-2 border-2 rounded text-base outline-none transition-all duration-200 ${editingErrors.description ? 'border-red-600' : 'border-gray-200 focus:border-[#9BADBF] focus:shadow-[0_0_0_2px_rgba(82,109,130,0.2)]'}`}
+                        className={`min-h-[60px] resize-y p-1 px-2 border-2 rounded text-base outline-none transition-all duration-200 ${editingErrors.description ? 'border-red-600' : 'border-gray-200 focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]'}`}
                         value={editingTask?.description || ''}
                         onChange={e => setEditingTask({ ...editingTask, description: e.target.value })}
                         placeholder="Description"
@@ -1684,7 +1684,9 @@ export default function TaskManager({ user }) {
                       <div className="flex gap-2 items-center mt-1">
                         <input
                           type="date"
-                          className={`p-3 px-4 border-2 rounded-lg text-base outline-none transition-all duration-200 bg-white text-[#9BADBF] min-w-[120px] ${editingErrors.deadline ? 'border-red-600' : 'border-gray-200 focus:border-[#9BADBF] focus:shadow-[0_0_0_2px_rgba(82,109,130,0.2)]'}`}
+                          className={`p-3 px-4 border-2 rounded-lg text-base outline-none transition-all duration-200 bg-white text-[#2563eb] min-w-[120px] h-[46px] ${
+                            editingErrors.deadline ? 'border-red-600' : 'border-gray-200 focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]'
+                          }`}
                           value={editingTask?.deadline || ''}
                           onChange={e => setEditingTask({ ...editingTask, deadline: e.target.value })}
                           min={new Date().toISOString().split('T')[0]}
@@ -1693,7 +1695,7 @@ export default function TaskManager({ user }) {
                         <select
                           value={editingTask?.priority || 'Medium'}
                           onChange={e => setEditingTask({ ...editingTask, priority: e.target.value })}
-                          className="p-1 px-2 border-2 border-gray-200 rounded text-base outline-none transition-all duration-200 focus:border-[#9BADBF] focus:shadow-[0_0_0_2px_rgba(82,109,130,0.2)]"
+                          className="p-1 px-2 border-2 border-gray-200 rounded text-base outline-none transition-all duration-200 focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]"
                         >
                           {PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
                         </select>
@@ -1701,7 +1703,7 @@ export default function TaskManager({ user }) {
                         <select
                           value={editingTask?.status || 'To Do'}
                           onChange={e => setEditingTask({ ...editingTask, status: e.target.value })}
-                          className="p-1 px-2 border-2 border-gray-200 rounded text-base outline-none transition-all duration-200 focus:border-[#9BADBF] focus:shadow-[0_0_0_2px_rgba(82,109,130,0.2)]"
+                          className="p-1 px-2 border-2 border-gray-200 rounded text-base outline-none transition-all duration-200 focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]"
                         >
                           {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
@@ -1728,28 +1730,28 @@ export default function TaskManager({ user }) {
                   ) : (
                     <div>
                       <div onClick={() => openTaskDetails(task)} className="cursor-pointer">
-                        <span className={`text-[#9BADBF] break-words ${task.completed ? 'line-through text-slate-500' : ''}`}>
+                        <span className={`text-[#2563eb] break-words ${task.completed ? 'line-through text-slate-500' : ''}`}>
                           <strong>{task.text}</strong>
                         </span>
-                        <div className="mt-2 p-2 px-3 bg-slate-200/20 rounded-lg text-sm text-[#9BADBF] leading-relaxed break-words">
+                        <div className="mt-2 p-2 px-3 bg-slate-200/20 rounded-lg text-sm text-[#2563eb] leading-relaxed break-words">
                           <span className="block mb-1 break-words">
-                            <b className="text-slate-500">Description:</b> {task.description || 'No description'}
+                            <b className="text-[#64748b]">Description:</b> {task.description || 'No description'}
                           </span>
                           <span className="block mb-1 break-words">
-                            <b className="text-slate-500">Assignee:</b> {
+                            <b className="text-[#64748b]">Assignee:</b> {
                               task.assigneeNames && task.assigneeNames.length > 0 
                                 ? task.assigneeNames.join(', ')
                                 : (task.assignees?.map(id => getMemberNameById(id, task)).join(', ') || 'Unassigned')
                             }
                           </span>
                           <span className="block mb-1 break-words">
-                            <b className="text-slate-500">Deadline:</b> {task.deadline || 'None'}
+                            <b className="text-[#64748b]">Deadline:</b> {task.deadline || 'None'}
                           </span>
                           <span className="block mb-1 break-words">
-                            <b className="text-slate-500">Priority:</b> {task.priority}
+                            <b className="text-[#64748b]">Priority:</b> {task.priority}
                           </span>
                           <span className="block mb-0 break-words">
-                            <b className="text-slate-500">Status:</b> {task.status}
+                            <b className="text-[#64748b]">Status:</b> {task.status}
                           </span>
                         </div>
                       </div>
@@ -1770,10 +1772,10 @@ export default function TaskManager({ user }) {
                       </div>
                     ) : (
                       <>
-                        <button onClick={(e) => { e.stopPropagation(); openTaskDetails(task); }} className="p-2 bg-transparent border-none rounded-lg cursor-pointer transition-all duration-200 flex items-center justify-center text-[#9BADBF] hover:bg-[#9BADBF]/10" title="View Details">
+                        <button onClick={(e) => { e.stopPropagation(); openTaskDetails(task); }} className="p-2 bg-transparent border-none rounded-lg cursor-pointer transition-all duration-200 flex items-center justify-center text-[#2563eb] hover:bg-[#2563eb]/10" title="View Details">
                           <Eye size={16} />
                         </button>
-                        <button onClick={() => startEditing(task)} className="p-2 bg-transparent border-none rounded-lg cursor-pointer transition-all duration-200 flex items-center justify-center text-[#9BADBF] hover:bg-[#9BADBF]/10">
+                        <button onClick={() => startEditing(task)} className="p-2 bg-transparent border-none rounded-lg cursor-pointer transition-all duration-200 flex items-center justify-center text-[#2563eb] hover:bg-[#2563eb]/10">
                           <Edit2 size={16} />
                         </button>
                         <button onClick={() => deleteTask(task.id)} className="p-2 bg-transparent border-none rounded-lg cursor-pointer transition-all duration-200 flex items-center justify-center text-red-600 hover:bg-red-100">
@@ -1782,7 +1784,7 @@ export default function TaskManager({ user }) {
                       </>
                     )
                   ) : (
-                    <button onClick={(e) => { e.stopPropagation(); openTaskDetails(task); }} className="p-2 bg-transparent border-none rounded-lg cursor-pointer transition-all duration-200 flex items-center justify-center text-[#9BADBF] hover:bg-[#9BADBF]/10" title="View Details">
+                    <button onClick={(e) => { e.stopPropagation(); openTaskDetails(task); }} className="p-2 bg-transparent border-none rounded-lg cursor-pointer transition-all duration-200 flex items-center justify-center text-[#2563eb] hover:bg-[#2563eb]/10" title="View Details">
                       <Eye size={16} />
                     </button>
                   )}
@@ -1802,13 +1804,13 @@ export default function TaskManager({ user }) {
 
       {/* Progress Bar */}
       {totalTasks > 0 && (
-        <div className="mt-8 p-5 bg-gradient-to-br from-[#9BADBF]/5 to-[#9BADBF]/5 rounded-xl border-2 border-[#9BADBF]/20">
-          <div className="flex justify-between text-sm text-[#9BADBF] mb-2 font-semibold">
+        <div className="mt-8 p-5 bg-gradient-to-br from-[#2563eb]/5 to-[#2563eb]/5 rounded-xl border-2 border-[#2563eb]/20">
+          <div className="flex justify-between text-sm text-[#2563eb] mb-2 font-semibold">
             <span>Overall Progress</span>
             <span>{Math.round(progress)}% ({completedCount}/{totalTasks})</span>
           </div>
           <div className="w-full bg-slate-400/20 rounded-full h-2.5">
-            <div className="bg-[#9BADBF] h-2.5 rounded-full transition-[width] duration-300 shadow-[0_2px_6px_rgba(82,109,130,0.3)]" style={{ width: `${progress}%` }} />
+            <div className="bg-[#2563eb] h-2.5 rounded-full transition-[width] duration-300 shadow-[0_2px_6px_rgba(37,99,235,0.3)]" style={{ width: `${progress}%` }} />
           </div>
         </div>
       )}

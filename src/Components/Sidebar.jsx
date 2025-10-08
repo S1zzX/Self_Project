@@ -48,7 +48,7 @@ function Sidebar({ userType, user, onSelect, selected, onLogout, visible }) {
             zIndex: 110,
             width: 44,
             height: 40,
-            background: '#123F66',
+            background: '#1e293b',
             color: '#fff',
             border: 'none',
             borderRadius: 8,
@@ -56,7 +56,7 @@ function Sidebar({ userType, user, onSelect, selected, onLogout, visible }) {
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+            boxShadow: '0 6px 18px rgba(2,6,23,0.35)'
           }}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -88,18 +88,18 @@ function Sidebar({ userType, user, onSelect, selected, onLogout, visible }) {
             style={{
             width: isMobile ? '72%' : '300px',
             maxWidth: isMobile ? 400 : 'none',
-            background: '#123F66',
+            background: '#111827',
             height: '100vh',
             padding: '24px',
             boxSizing: 'border-box',
             borderRightWidth: '3px',
             borderRightStyle: 'solid',
-            borderRightColor: '#5D8CCF',
+            borderRightColor: 'rgba(37,99,235,0.12)',
             position: 'fixed',
             left: 0,
             top: 0,
             zIndex: isMobile ? 200 : 100,
-            boxShadow: isMobile ? '8px 0 24px rgba(0,0,0,0.3)' : '4px 0 12px rgba(0, 0, 0, 0.1)',
+            boxShadow: isMobile ? '12px 0 36px rgba(2,6,23,0.45)' : '6px 0 18px rgba(2,6,23,0.12)',
             display: 'flex',
             flexDirection: 'column'
           }}
@@ -116,7 +116,7 @@ function Sidebar({ userType, user, onSelect, selected, onLogout, visible }) {
                 width: 36,
                 height: 36,
                 background: 'transparent',
-                color: '#DDEAF8',
+                color: '#f1f5f9',
                 border: '1px solid rgba(255,255,255,0.06)',
                 borderRadius: 8,
                 display: 'flex',
@@ -140,25 +140,25 @@ function Sidebar({ userType, user, onSelect, selected, onLogout, visible }) {
               padding: '16px 0',
               borderBottomWidth: '2px',
               borderBottomStyle: 'solid',
-              borderBottomColor: 'rgba(93, 140, 207, 0.22)'
+              borderBottomColor: 'rgba(37,99,235,0.08)'
             }}
           >
             <div
               style={{
                 width: '64px',
                 height: '64px',
-                background: '#5D8CCF',
+                background: 'linear-gradient(135deg, #2563eb 0%, #8b5cf6 100%)',
                 borderRadius: '50%',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#123F66',
+                color: '#ffffff',
                 fontSize: '28px',
                 marginBottom: '12px',
-                boxShadow: '0 4px 12px rgba(93, 140, 207, 0.28)',
+                boxShadow: '0 6px 18px rgba(37,99,235,0.22)',
                 borderWidth: '2px',
                 borderStyle: 'solid',
-                borderColor: 'rgba(221, 234, 248, 0.12)',
+                borderColor: 'rgba(241,245,249,0.04)',
                 transition: 'all 0.3s ease',
                 fontWeight: 'bold'
               }}
@@ -169,7 +169,7 @@ function Sidebar({ userType, user, onSelect, selected, onLogout, visible }) {
               style={{
                 fontSize: '16px',
                 fontWeight: '600',
-                color: '#DDEAF8',
+                color: '#f1f5f9',
                 textAlign: 'center',
                 letterSpacing: '0.5px'
               }}
@@ -187,7 +187,7 @@ function Sidebar({ userType, user, onSelect, selected, onLogout, visible }) {
               paddingBottom: '20px',
               borderBottomWidth: '2px',
               borderBottomStyle: 'solid',
-              borderBottomColor: 'rgba(93,140,207,0.16)'
+              borderBottomColor: 'rgba(37,99,235,0.08)'
             }}
           >
             <NotificationBell />
@@ -224,16 +224,16 @@ function Sidebar({ userType, user, onSelect, selected, onLogout, visible }) {
                 position: 'relative',
                 overflow: 'hidden',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                boxShadow: '0 12px 36px rgba(2,6,23,0.14), inset 0 1px 0 rgba(255, 255, 255, 0.04)'
               }}
             >
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: '#5D8CCF', opacity: 0.6 }} />
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(135deg, #2563eb 0%, #8b5cf6 100%)', opacity: 0.6 }} />
 
               <div
                 style={{
                   width: '48px',
                   height: '48px',
-                  background: user?.profileImage ? `url(${getProfileImageUrl(user.profileImage)})` : '#5D8CCF',
+                  background: user?.profileImage ? `url(${getProfileImageUrl(user.profileImage)})` : '#2563eb',
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                   borderRadius: '50%',
@@ -244,10 +244,10 @@ function Sidebar({ userType, user, onSelect, selected, onLogout, visible }) {
                   fontWeight: '700',
                   fontSize: '18px',
                   margin: '0 auto 16px auto',
-                  boxShadow: '0 4px 16px rgba(93, 140, 207, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                  boxShadow: '0 6px 18px rgba(37,99,235,0.22), inset 0 1px 0 rgba(255, 255, 255, 0.06)',
                   borderWidth: '2px',
                   borderStyle: 'solid',
-                  borderColor: 'rgba(255, 255, 255, 0.15)',
+                  borderColor: 'rgba(255, 255, 255, 0.06)',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                 }}
               >
@@ -258,7 +258,7 @@ function Sidebar({ userType, user, onSelect, selected, onLogout, visible }) {
                 <div style={{ color: '#ffffff', fontWeight: '700', fontSize: '16px', marginBottom: '8px', letterSpacing: '0.5px', textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)' }}>
                   {user?.name || 'User'}
                 </div>
-                <div style={{ background: '#5D8CCF', color: 'white', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px', padding: '6px 12px', borderRadius: '20px', display: 'inline-block', boxShadow: '0 2px 8px rgba(93, 140, 207, 0.28)', borderWidth: '1px', borderStyle: 'solid', borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+                <div style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #2563eb 100%)', color: 'white', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px', padding: '6px 12px', borderRadius: '20px', display: 'inline-block', boxShadow: '0 2px 8px rgba(139,92,246,0.18)', borderWidth: '1px', borderStyle: 'solid', borderColor: 'rgba(255, 255, 255, 0.06)' }}>
                   {user?.userType || 'user'}
                 </div>
               </div>
@@ -276,7 +276,7 @@ function Sidebar({ userType, user, onSelect, selected, onLogout, visible }) {
                 }}
                 style={{
                   width: '100%',
-                  background: '#dc2626',
+                  background: '#ef4444',
                   color: 'white',
                   borderWidth: 0,
                   borderStyle: 'none',
@@ -289,15 +289,15 @@ function Sidebar({ userType, user, onSelect, selected, onLogout, visible }) {
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '10px',
-                  boxShadow: '0 4px 16px rgba(220, 38, 38, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                  transition: 'all 0.3s ease'
+                  boxShadow: '0 6px 18px rgba(239,68,68,0.22), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
+                  transition: 'all 0.24s ease'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#b91c1c';
+                  e.currentTarget.style.background = '#dc2626';
                   e.currentTarget.style.transform = 'translateY(-2px)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#dc2626';
+                  e.currentTarget.style.background = '#ef4444';
                   e.currentTarget.style.transform = 'translateY(0)';
                 }}
               >
@@ -316,11 +316,11 @@ function NavButton({ icon, label, active, onClick, isAdmin }) {
   const [isHovered, setIsHovered] = useState(false);
 
   const baseStyle = {
-  background: isAdmin ? 'rgba(157, 178, 191, 0.05)' : 'rgba(93,140,207,0.08)',
+    background: isAdmin ? 'rgba(139, 92, 246, 0.1)' : 'rgba(59, 130, 246, 0.1)',
     borderWidth: '1px',
     borderStyle: 'solid',
-  borderColor: isAdmin ? 'rgba(157, 178, 191, 0.3)' : 'rgba(93,140,207,0.12)',
-  color: '#DDEAF8',
+    borderColor: isAdmin ? 'rgba(139, 92, 246, 0.3)' : 'rgba(59, 130, 246, 0.2)',
+    color: '#f1f5f9',
     fontWeight: active ? '700' : '500',
     fontSize: '16px',
     textAlign: 'left',
@@ -338,14 +338,14 @@ function NavButton({ icon, label, active, onClick, isAdmin }) {
 
   const activeStyle = active
     ? {
-        background: isAdmin ? '#9DB2BF' : '#5D8CCF',
-        color: isAdmin ? '#123F66' : '#ffffff',
+        background: isAdmin ? '#8b5cf6' : '#3b82f6',
+        color: '#ffffff',
         boxShadow: '0 4px 12px rgba(93,140,207,0.4)',
-        borderColor: isAdmin ? '#9DB2BF' : '#5D8CCF'
+        borderColor: isAdmin ? '#9DB2BF' : '#60a5fa'
       }
     : {};
 
-  const hoverStyle = isHovered && !active ? { background: isAdmin ? 'rgba(157, 178, 191, 0.1)' : 'rgba(93,140,207,0.12)', borderColor: isAdmin ? '#9DB2BF' : '#5D8CCF', boxShadow: '0 2px 8px rgba(93,140,207,0.18)' } : {};
+  const hoverStyle = isHovered && !active ? { background: isAdmin ? 'rgba(157, 178, 191, 0.1)' : 'rgba(93,140,207,0.12)', borderColor: isAdmin ? '#9DB2BF' : '#60a5fa', boxShadow: '0 2px 8px rgba(93,140,207,0.18)' } : {};
 
   return (
     <button
@@ -354,7 +354,7 @@ function NavButton({ icon, label, active, onClick, isAdmin }) {
       onMouseLeave={() => setIsHovered(false)}
       style={{ ...baseStyle, ...activeStyle, ...hoverStyle }}
     >
-  <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: '3px', background: active ? '#ffffff' : '#5D8CCF', transform: active || isHovered ? 'scaleY(1)' : 'scaleY(0)', transition: 'transform 0.3s ease' }} />
+  <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: '3px', background: active ? '#ffffff' : '#60a5fa', transform: active || isHovered ? 'scaleY(1)' : 'scaleY(0)', transition: 'transform 0.3s ease' }} />
       {icon}
       {label}
     </button>

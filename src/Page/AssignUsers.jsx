@@ -316,7 +316,7 @@ export default function AssignUsers({ user }) {
   return (
     <div className="max-w-full mx-auto p-6 bg-white/95 min-h-screen font-sans">
       {/* Header */}
-      <div className="bg-blue-700 rounded-xl p-6 text-white mb-8 shadow-xl">
+      <div className="bg-gradient-to-r from-[#2563eb] to-[#8b5cf6] rounded-xl p-6 text-white mb-8 shadow-xl">
         <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
           <Users size={32} /> User Management
         </h1>
@@ -324,7 +324,7 @@ export default function AssignUsers({ user }) {
       </div>
 
       {/* Add User Section */}
-      <div className="bg-blue-50 p-6 rounded-xl border-2 border-blue-100 mb-8">
+      <div className="bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] p-6 rounded-xl border-2 border-[#e2e8f0] mb-8">
         <h2 className="text-slate-800 mb-5 flex items-center gap-2 text-xl font-semibold">
           <UserPlus size={24} /> Add New User
         </h2>
@@ -338,7 +338,7 @@ export default function AssignUsers({ user }) {
               className={`px-4 py-3 border-2 rounded-lg text-base outline-none transition-all bg-white ${
                 validationErrors.name 
                   ? 'border-red-600 focus:ring-2 focus:ring-red-200' 
-                  : 'border-gray-200 focus:border-blue-600 focus:ring-2 focus:ring-blue-200'
+                  : 'border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
               }`}
               maxLength={50}
             />
@@ -356,7 +356,7 @@ export default function AssignUsers({ user }) {
               className={`px-4 py-3 border-2 rounded-lg text-base outline-none transition-all bg-white ${
                 validationErrors.email 
                   ? 'border-red-600 focus:ring-2 focus:ring-red-200' 
-                  : 'border-gray-200 focus:border-blue-600 focus:ring-2 focus:ring-blue-200'
+                  : 'border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
               }`}
             />
             {validationErrors.email && (
@@ -373,7 +373,7 @@ export default function AssignUsers({ user }) {
               className={`px-4 py-3 border-2 rounded-lg text-base outline-none transition-all bg-white ${
                 validationErrors.password 
                   ? 'border-red-600 focus:ring-2 focus:ring-red-200' 
-                  : 'border-gray-200 focus:border-blue-600 focus:ring-2 focus:ring-blue-200'
+                  : 'border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
               }`}
               maxLength={100}
             />
@@ -389,7 +389,7 @@ export default function AssignUsers({ user }) {
               className={`px-4 py-3 border-2 rounded-lg text-base outline-none transition-all bg-white ${
                 validationErrors.userType 
                   ? 'border-red-600 focus:ring-2 focus:ring-red-200' 
-                  : 'border-gray-200 focus:border-blue-600 focus:ring-2 focus:ring-blue-200'
+                  : 'border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
               }`}
             >
               <option value="user">User</option>
@@ -402,7 +402,7 @@ export default function AssignUsers({ user }) {
           
           <button 
             onClick={addUser}
-            className="flex items-center justify-center gap-2 w-14 h-14 min-w-[56px] min-h-[56px] rounded-full bg-blue-700 hover:bg-blue-800 border border-white/30 text-white font-semibold cursor-pointer transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:scale-95"
+            className="flex items-center justify-center gap-2 w-14 h-14 min-w-[56px] min-h-[56px] rounded-full bg-gradient-to-r from-[#2563eb] to-[#8b5cf6] hover:from-[#1e3a5f] hover:to-[#5b21b6] border border-white/30 text-white font-semibold cursor-pointer transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:scale-95"
           >
             <UserPlus size={20} strokeWidth={2.4} />
           </button>
@@ -413,7 +413,7 @@ export default function AssignUsers({ user }) {
       <div>
         <h2 className="text-slate-800 mb-5 text-2xl font-semibold">Existing Users ({users.length})</h2>
         {users.length === 0 ? (
-          <div className="text-center py-12 text-slate-500 bg-slate-100/50 rounded-xl my-6 border-2 border-dashed border-blue-200">
+          <div className="text-center py-12 text-[#64748b] bg-[#f8fafc]/60 rounded-xl my-6 border-2 border-dashed border-[#e2e8f0]">
             <div className="text-5xl mb-4">👥</div>
             <p className="text-lg mb-1 text-slate-800 font-medium">No users found</p>
             <p className="text-sm text-slate-500">Add your first user above to get started.</p>
@@ -423,12 +423,12 @@ export default function AssignUsers({ user }) {
             {users.map(userItem => (
               <div 
                 key={userItem.id} 
-                className="bg-white/90 border-2 border-blue-100 rounded-xl p-5 shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-start gap-4 relative overflow-hidden min-h-[100px]"
+                className="bg-white/95 border-2 border-[#e2e8f0] rounded-xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-start gap-4 relative overflow-hidden min-h-[100px]"
               >
                 {editingId === userItem.id ? (
                   <div className="w-full flex flex-col gap-3">
                     <div className="flex items-center gap-4 mb-3">
-                      <div className="w-12 h-12 bg-blue-700 rounded-full flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
+                      <div className="w-12 h-12 bg-gradient-to-br from-[#2563eb] to-[#8b5cf6] rounded-full flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
                         {editingUser.profile_image ? (
                           <img
                             src={getProfileImageUrl(editingUser.profile_image)}
@@ -451,7 +451,7 @@ export default function AssignUsers({ user }) {
 
                         <label 
                           htmlFor={`edit-avatar-${editingId}`} 
-                          className="px-3 py-1.5 text-sm font-medium rounded-md bg-blue-600 text-white cursor-pointer hover:bg-blue-700 transition-all"
+                          className="px-3 py-1.5 text-sm font-medium rounded-md bg-gradient-to-r from-[#8b5cf6] to-[#6d28d9] text-white cursor-pointer hover:bg-gradient-to-br from-[#2563eb] to-[#8b5cf6] transition-all"
                         >
                           Change
                         </label>
@@ -476,7 +476,7 @@ export default function AssignUsers({ user }) {
                         className={`w-full px-3 py-2 border-2 rounded-md text-sm outline-none transition-all ${
                           editValidationErrors.name 
                             ? 'border-red-600 focus:ring-2 focus:ring-red-200' 
-                            : 'border-gray-200 focus:border-blue-600 focus:ring-2 focus:ring-blue-200'
+                            : 'border-[#e2e8f0] focus:border-[#2563eb] focus:ring-2 focus:ring-[#e6f0ff]'
                         }`}
                         placeholder="Full Name (required)"
                         maxLength={50}
@@ -494,7 +494,7 @@ export default function AssignUsers({ user }) {
                         className={`w-full px-3 py-2 border-2 rounded-md text-sm outline-none transition-all ${
                           editValidationErrors.email 
                             ? 'border-red-600 focus:ring-2 focus:ring-red-200' 
-                            : 'border-gray-200 focus:border-blue-600 focus:ring-2 focus:ring-blue-200'
+                            : 'border-[#e2e8f0] focus:border-[#2563eb] focus:ring-2 focus:ring-[#e6f0ff]'
                         }`}
                         placeholder="Email Address (required)"
                       />
@@ -511,7 +511,7 @@ export default function AssignUsers({ user }) {
                         className={`w-full px-3 py-2 border-2 rounded-md text-sm outline-none transition-all ${
                           editValidationErrors.password 
                             ? 'border-red-600 focus:ring-2 focus:ring-red-200' 
-                            : 'border-gray-200 focus:border-blue-600 focus:ring-2 focus:ring-blue-200'
+                            : 'border-[#e2e8f0] focus:border-[#2563eb] focus:ring-2 focus:ring-[#e6f0ff]'
                         }`}
                         placeholder="New Password (leave blank to keep current)"
                         maxLength={100}
@@ -528,7 +528,7 @@ export default function AssignUsers({ user }) {
                         className={`w-full px-3 py-2 border-2 rounded-md text-sm outline-none transition-all ${
                           editValidationErrors.userType 
                             ? 'border-red-600 focus:ring-2 focus:ring-red-200' 
-                            : 'border-gray-200 focus:border-blue-600 focus:ring-2 focus:ring-blue-200'
+                            : 'border-[#e2e8f0] focus:border-[#2563eb] focus:ring-2 focus:ring-[#e6f0ff]'
                         }`}
                       >
                         <option value="user">User</option>
@@ -556,7 +556,7 @@ export default function AssignUsers({ user }) {
                   </div>
                 ) : (
                   <>
-                    <div className="w-12 h-12 bg-blue-700 rounded-full flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
+                    <div className="w-12 h-12 bg-gradient-to-br from-[#2563eb] to-[#8b5cf6] rounded-full flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
                       {userItem.profile_image ? (
                         <img
                           src={getProfileImageUrl(userItem.profile_image)}
@@ -569,12 +569,12 @@ export default function AssignUsers({ user }) {
                     </div>
 
                     <div className="flex-1 flex flex-col gap-1 min-w-0 pr-20">
-                      <h3 className="m-0 text-slate-800 text-lg leading-tight break-words">{userItem.name}</h3>
-                      <p className="m-0 text-slate-500 text-sm leading-tight break-words">{userItem.email}</p>
+                      <h3 className="m-0 text-[#1e293b] text-lg leading-tight break-words">{userItem.name}</h3>
+                      <p className="m-0 text-[#64748b] text-sm leading-tight break-words">{userItem.email}</p>
                       <span className={`inline-block px-2 py-1 rounded text-xs font-semibold uppercase w-fit ${
                         userItem.userType === 'admin' 
-                          ? 'bg-blue-600 text-white' 
-                          : 'bg-slate-200 text-slate-800'
+                          ? 'bg-gradient-to-r from-[#8b5cf6] to-[#6d28d9] text-white' 
+                          : 'bg-[#f1f5f9] text-[#1e293b]'
                       }`}>
                         {userItem.userType.toUpperCase()}
                       </span>
@@ -587,14 +587,14 @@ export default function AssignUsers({ user }) {
                     <div className="flex mt-2.5 gap-2 flex-shrink-0 absolute top-5 right-12 z-10">
                       <button 
                         onClick={() => startEditing(userItem)} 
-                        className="p-2 bg-white/90 border border-black/10 rounded-lg cursor-pointer transition-all flex items-center justify-center gap-1 text-blue-600 hover:bg-blue-50 hover:border-blue-600"
+                        className="p-2 bg-white/95 border border-black/10 rounded-lg cursor-pointer transition-all flex items-center justify-center gap-1 text-[#2563eb] hover:bg-[#f1f5f9] hover:border-[#2563eb]"
                         title="Edit User"
                       >
                         <Edit2 size={16} />
                       </button>
                       <button 
                         onClick={() => deleteUser(userItem.id)} 
-                        className="p-2 bg-white/90 border border-black/10 rounded-lg cursor-pointer transition-all flex items-center justify-center gap-1 text-red-600 hover:bg-red-50 hover:border-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="p-2 bg-white/95 border border-black/10 rounded-lg cursor-pointer transition-all flex items-center justify-center gap-1 text-red-600 hover:bg-red-50 hover:border-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
                         title="Delete User"
                         disabled={userItem.id === user.id}
                       >
