@@ -375,8 +375,16 @@ app.put('/users/:id', verifyToken, async (req, res) => {
   const { id } = req.params;
   const { name, email, password, userType, currentPassword } = req.body;
 
-  if (req.user.userType !== 'admin' && req.user.id !== parseInt(id)) {
+  // Check if user is trying to modify themselves
+  if (req.user.id !== parseInt(id) && req.user.userType !== 'admin') {
     return res.status(403).json({ error: 'Permission denied' });
+  }
+
+  // ✅ PREVENT ADMIN FROM DEMOTING THEMSELVES
+  if (req.user.id === parseInt(id) && req.user.userType === 'admin' && userType === 'user') {
+    return res.status(403).json({ 
+      error: 'You cannot demote yourself from admin. Another admin must change your role.' 
+    });
   }
 
   try {
@@ -424,6 +432,13 @@ app.delete('/users/:id', verifyToken, (req, res) => {
   }
 
   const { id } = req.params;
+
+  // ✅ PREVENT SELF-DELETION
+  if (req.user.id === parseInt(id)) {
+    return res.status(403).json({ 
+      error: 'You cannot delete your own account' 
+    });
+  }
 
   db.run('DELETE FROM users WHERE id = ?', [id], function (err) {
     if (err) return res.status(500).json({ error: 'Error deleting user' });

@@ -1,30 +1,57 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Plus, Check, Edit2, Trash2, X, Eye, Filter } from 'lucide-react';
-
-// Mock useAuth hook - replace with your actual implementation
-const useAuth = () => {
-  const apiRequest = useCallback(async (url, options) => {
-    const token = localStorage.getItem('accessToken');
-    return fetch(url, {
-      ...options,
-      headers: {
-        ...options?.headers,
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-  }, []);
-
-  return {
-    apiRequest,
-    isAdmin: true
-  };
-};
+import { Plus, Check, Edit2, Trash2, X, Eye, Filter, Calendar } from 'lucide-react';
+import { useAuth } from '../AuthContext';
 
 const PRIORITIES = ['High', 'Medium', 'Low'];
 const STATUSES = ['To Do', 'In Progress', 'Done'];
 const ITEMS_PER_PAGE_OPTIONS = [6, 9, 12, 18, 24];
 const TASKS_PER_PAGE = 9;
+
+// ==================== DELETE CONFIRMATION MODAL ====================
+function DeleteConfirmationModal({ isOpen, onClose, onConfirm, taskName }) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1000] backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]" onClick={onClose}>
+      <div className="bg-white rounded-2xl p-6 max-w-[450px] w-[90%] shadow-[0_20px_60px_rgba(0,0,0,0.3)] animate-[slideIn_0.3s_ease-out]" onClick={e => e.stopPropagation()}>
+  
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+            <Trash2 className="text-red-600" size={24} />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-[#1e293b] m-0">Delete Task?</h2>
+            <p className="text-sm text-slate-500 m-0">This action cannot be undone</p>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="my-5 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
+          <p className="text-sm text-slate-700 m-0">
+            Are you sure you want to delete <strong className="text-red-600">"{taskName}"</strong>?
+          </p>
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-3 mt-6">
+          <button 
+            className="px-5 py-2.5 bg-slate-100 text-slate-700 border-2 border-slate-200 rounded-lg cursor-pointer text-sm font-semibold transition-all duration-200 hover:bg-slate-200 hover:border-slate-300"
+            onClick={onClose}
+          >
+            Cancel
+          </button>
+          <button 
+            className="px-5 py-2.5 bg-red-600 text-white border-none rounded-lg cursor-pointer text-sm font-semibold transition-all duration-200 shadow-[0_2px_6px_rgba(220,38,38,0.3)] hover:bg-red-700 hover:-translate-y-px hover:shadow-[0_4px_10px_rgba(220,38,38,0.4)] flex items-center gap-2"
+            onClick={onConfirm}
+          >
+            <Trash2 size={16} />
+            Delete Task
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ==================== PAGINATION COMPONENT ====================
 function Pagination({ currentPage, totalPages, onPageChange }) {
@@ -212,6 +239,15 @@ function TaskProgressBar({ progress, onProgressChange, disabled = false }) {
     return 'In Progress';
   };
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'To Do': return 'text-amber-600';
+      case 'In Progress': return 'text-blue-600';
+      case 'Done': return 'text-green-600';
+      default: return 'text-slate-600';
+    }
+  };
+
   return (
     <div className="mt-3 p-3 bg-slate-200/10 rounded-lg border border-[#2563eb]/20">
       <div className="flex justify-between mb-2 text-xs font-semibold">
@@ -228,13 +264,13 @@ function TaskProgressBar({ progress, onProgressChange, disabled = false }) {
         title={disabled ? "Task is overdue - Contact admin to modify" : "Drag to update progress"}
       >
         <div 
-          className="h-full bg-[#2563eb] rounded-full transition-[width] duration-[50ms] linear relative"
+          className="h-full bg-gradient-to-r from-[#2563eb] to-[#3b82f6] rounded-full transition-[width] duration-[50ms] linear relative"
           style={{ width: `${localProgress}%` }}
         />
         <div 
           className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-[#2563eb] rounded-full shadow-md z-10 transition-all duration-200 ${
-             disabled ? 'cursor-not-allowed opacity-50' : 'cursor-grab hover:scale-110 hover:border-[#2563eb] hover:shadow-lg active:cursor-grabbing active:scale-90'
-           }`}
+            disabled ? 'cursor-not-allowed opacity-50' : 'cursor-grab hover:scale-110 hover:border-[#2563eb] hover:shadow-lg active:cursor-grabbing active:scale-90'
+          }`}
           style={{ left: `calc(${localProgress}% - 8px)` }}
         />
         {disabled && (
@@ -243,7 +279,7 @@ function TaskProgressBar({ progress, onProgressChange, disabled = false }) {
           </div>
         )}
       </div>
-      <div className="text-center text-[11px] font-semibold text-[#2563eb] uppercase tracking-wider">
+      <div className={`text-center text-[11px] font-semibold uppercase tracking-wider ${getStatusColor(getStatusFromProgress(localProgress))}`}>
         {getStatusFromProgress(localProgress)}
       </div>
     </div>
@@ -362,62 +398,62 @@ function FilterModal({
         </div>
 
         <div className="flex flex-col gap-5 my-5">
-          <div className="flex flex-col gap-2">
-            <label className="font-semibold text-[#2563eb] text-sm uppercase tracking-wide">Status</label>
-            <select
-              value={tempFilter}
-              onChange={e => setTempFilter(e.target.value)}
-              className="p-3 px-4 rounded-lg border-2 border-gray-200 bg-white text-sm text-[#2563eb] outline-none transition-all duration-200 cursor-pointer focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]"
-            >
-              <option value="All">All Status</option>
-              {STATUSES.map(s => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label className="font-semibold text-[#2563eb] text-sm uppercase tracking-wide">Priority</label>
-            <select
-              value={tempPriorityFilter}
-              onChange={e => setTempPriorityFilter(e.target.value)}
-              className="p-3 px-4 rounded-lg border-2 border-gray-200 bg-white text-sm text-[#2563eb] outline-none transition-all duration-200 cursor-pointer focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]"
-            >
-              <option value="All">All Priorities</option>
-              {PRIORITIES.map(p => (
-                <option key={p} value={p}>{p}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label className="font-semibold text-[#2563eb] text-sm uppercase tracking-wide">Assignee</label>
-            <select
-              value={tempAssigneeFilter}
-              onChange={e => setTempAssigneeFilter(e.target.value)}
-              className="p-3 px-4 rounded-lg border-2 border-gray-200 bg-white text-sm text-[#2563eb] outline-none transition-all duration-200 cursor-pointer focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]"
-            >
-              <option value="All">All Assignees</option>
-              {users.map(u => (
-                <option key={u.id} value={u.id}>{u.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label className="font-semibold text-[#2563eb] text-sm uppercase tracking-wide">Deadline</label>
-            <select
-              value={tempDeadlineFilter}
-              onChange={e => setTempDeadlineFilter(e.target.value)}
-              className="p-3 px-4 rounded-lg border-2 border-gray-200 bg-white text-sm text-[#2563eb] outline-none transition-all duration-200 cursor-pointer focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]"
-            >
-              <option value="All">All Dates</option>
-              <option value="Overdue">Overdue</option>
-              <option value="Today">Today</option>
-              <option value="This Week">This Week</option>
-            </select>
-          </div>
+        <div className="flex flex-col gap-2">
+          <label className="font-semibold text-green-600 text-sm uppercase tracking-wide">Status</label>
+          <select
+            value={tempFilter}
+            onChange={e => setTempFilter(e.target.value)}
+            className="p-3 px-4 rounded-lg border-2 border-gray-200 bg-white text-sm text-slate-700 outline-none transition-all duration-200 cursor-pointer focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]"
+          >
+            <option value="All">All Status</option>
+            {STATUSES.map(s => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
         </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="font-semibold text-red-600 text-sm uppercase tracking-wide">Priority</label>
+          <select
+            value={tempPriorityFilter}
+            onChange={e => setTempPriorityFilter(e.target.value)}
+            className="p-3 px-4 rounded-lg border-2 border-gray-200 bg-white text-sm text-slate-700 outline-none transition-all duration-200 cursor-pointer focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]"
+          >
+            <option value="All">All Priorities</option>
+            {PRIORITIES.map(p => (
+              <option key={p} value={p}>{p}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="font-semibold text-purple-600 text-sm uppercase tracking-wide">Assignee</label>
+          <select
+            value={tempAssigneeFilter}
+            onChange={e => setTempAssigneeFilter(e.target.value)}
+            className="p-3 px-4 rounded-lg border-2 border-gray-200 bg-white text-sm text-slate-700 outline-none transition-all duration-200 cursor-pointer focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]"
+          >
+            <option value="All">All Assignees</option>
+            {users.map(u => (
+              <option key={u.id} value={u.id}>{u.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="font-semibold text-orange-600 text-sm uppercase tracking-wide">Deadline</label>
+          <select
+            value={tempDeadlineFilter}
+            onChange={e => setTempDeadlineFilter(e.target.value)}
+            className="p-3 px-4 rounded-lg border-2 border-gray-200 bg-white text-sm text-slate-700 outline-none transition-all duration-200 cursor-pointer focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]"
+          >
+            <option value="All">All Dates</option>
+            <option value="Overdue">Overdue</option>
+            <option value="Today">Today</option>
+            <option value="This Week">This Week</option>
+          </select>
+        </div>
+      </div>
 
         <div className="flex justify-end gap-3 mt-5 pt-5 border-t-2 border-[#2563eb]/10">
           {hasActiveFilters && (
@@ -593,13 +629,14 @@ function TaskDetailsModal({
   };
 
   const getStatusClass = (status, completed) => {
-    if (completed) return 'bg-[#2563eb]/10 text-[#2563eb] font-semibold';
-    switch (status?.toLowerCase()) {
-      case 'in progress': return 'bg-[#2563eb]/10 text-[#2563eb] font-semibold';
-      case 'to do': return 'bg-amber-500/10 text-amber-600 font-semibold';
-      default: return 'bg-amber-500/10 text-amber-600 font-semibold';
-    }
-  };
+  if (completed) return 'bg-green-500/10 text-green-600 font-semibold border-green-500/20';
+  switch (status?.toLowerCase()) {
+    case 'in progress': return 'bg-blue-500/10 text-blue-600 font-semibold border-blue-500/20';
+    case 'to do': return 'bg-amber-500/10 text-amber-600 font-semibold border-amber-500/20';
+    case 'done': return 'bg-green-500/10 text-green-600 font-semibold border-green-500/20';
+    default: return 'bg-amber-500/10 text-amber-600 font-semibold border-amber-500/20';
+  }
+};
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1000] backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]" onClick={onClose}>
@@ -629,7 +666,7 @@ function TaskDetailsModal({
         <div className="grid gap-5">
           {/* Description */}
           <div className="flex flex-col gap-2">
-            <div className="font-semibold text-[#2563eb] text-sm uppercase tracking-wide">Description</div>
+            <div className="font-semibold text-blue-600 text-sm uppercase tracking-wide">Description</div>
             {isEditing ? (
               <>
                 <textarea
@@ -649,7 +686,7 @@ function TaskDetailsModal({
 
           {/* Assignees */}
           <div className="flex flex-col gap-2">
-            <div className="font-semibold text-[#2563eb] text-sm uppercase tracking-wide">Assigned To</div>
+            <div className="font-semibold text-purple-600 text-sm uppercase tracking-wide">Assigned To</div>
             {isEditing ? (
               <>
                 <AssigneeDropdown
@@ -680,7 +717,7 @@ function TaskDetailsModal({
 
           {/* Deadline */}
           <div className="flex flex-col gap-2">
-            <div className="font-semibold text-[#2563eb] text-sm uppercase tracking-wide">Deadline</div>
+            <div className="font-semibold text-orange-600 text-sm uppercase tracking-wide">Deadline</div>
             {isEditing ? (
               <>
                 <input
@@ -710,7 +747,7 @@ function TaskDetailsModal({
 
           {/* Status */}
           <div className="flex flex-col gap-2">
-            <div className="font-semibold text-[#2563eb] text-sm uppercase tracking-wide">Status</div>
+            <div className="font-semibold text-green-600 text-sm uppercase tracking-wide">Status</div>
             {isEditing ? (
               <select
                 value={editingTask.status}
@@ -728,7 +765,7 @@ function TaskDetailsModal({
 
           {/* Priority */}
           <div className="flex flex-col gap-2">
-            <div className="font-semibold text-[#2563eb] text-sm uppercase tracking-wide">Priority</div>
+            <div className="font-semibold text-red-600 text-sm uppercase tracking-wide">Priority</div>
             {isEditing ? (
               <select
                 value={editingTask.priority}
@@ -748,7 +785,7 @@ function TaskDetailsModal({
 
           {/* Progress */}
           <div className="flex flex-col gap-2">
-            <div className="font-semibold text-[#2563eb] text-sm uppercase tracking-wide">Progress</div>
+            <div className="font-semibold text-blue-600 text-sm uppercase tracking-wide">Progress</div>
             {isEditing ? (
               <div className="p-3 px-4 bg-[#f8fafc] border-2 border-[#e2e8f0] rounded-lg text-[#64748b] text-base leading-normal min-h-[20px]">
                 <TaskProgressBar 
@@ -788,7 +825,7 @@ function TaskDetailsModal({
 
           {/* Task ID */}
           <div className="flex flex-col gap-2">
-            <div className="font-semibold text-[#2563eb] text-sm uppercase tracking-wide">Task ID</div>
+            <div className="font-semibold text-slate-600 text-sm uppercase tracking-wide">Task ID</div>
             <div className="p-3 px-4 bg-slate-200/10 border-2 border-[#2563eb]/10 rounded-lg text-slate-500 text-base leading-normal min-h-[20px]">
               #{task.id}
             </div>
@@ -818,10 +855,9 @@ function TaskDetailsModal({
                 <button
                   className="px-6 py-3 bg-red-600 text-white border-none rounded-lg cursor-pointer text-base font-semibold transition-all duration-200 shadow-[0_4px_12px_rgba(220,38,38,0.3)] flex items-center gap-2 hover:bg-red-700 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(220,38,38,0.4)]"
                   onClick={() => {
-                    if (window.confirm('Are you sure you want to delete this task?')) {
-                      onDelete(task.id);
-                      onClose();
-                    }
+                    onClose();
+                    // Need to pass deleteModal setter from parent
+                    window.deleteTaskFromModal = { id: task.id, name: task.text };
                   }}
                 >
                   <Trash2 size={16} />Delete Task
@@ -871,7 +907,7 @@ export default function TaskManager({ user }) {
   const [assigneeFilter, setAssigneeFilter] = useState('All');
   const [deadlineFilter, setDeadlineFilter] = useState('All');
   const [showFilterModal, setShowFilterModal] = useState(false);
-
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, taskId: null, taskName: '' });
   // ==================== FETCH DATA ====================
   useEffect(() => {
     if (!isAdmin) return;
@@ -901,14 +937,25 @@ export default function TaskManager({ user }) {
         if (response.ok) {
           const data = await response.json();
           const normalizedTasks = data.map(task => {
-            if (task.completed || task.status === 'Done') {
-              return { ...task, progress: 100 };
-            }
-            if (task.status === 'To Do' && (!task.progress || task.progress === 0)) {
-              return { ...task, progress: 0 };
-            }
-            return task;
-          });
+          // Sync based on progress value
+          let normalizedStatus = task.status;
+          let normalizedProgress = task.progress || 0;
+          
+          if (task.completed || task.status === 'Done' || normalizedProgress >= 100) {
+            normalizedStatus = 'Done';
+            normalizedProgress = 100;
+          } else if (normalizedProgress === 0) {
+            normalizedStatus = 'To Do';
+          } else if (normalizedProgress > 0 && normalizedProgress < 100) {
+            normalizedStatus = 'In Progress';
+          }
+          
+          return { 
+            ...task, 
+            status: normalizedStatus,
+            progress: normalizedProgress 
+          };
+        });
           setTasks(normalizedTasks);
         }
       } catch (error) {
@@ -983,6 +1030,9 @@ export default function TaskManager({ user }) {
       completed = true;
     } else if (newTask.status === 'To Do') {
       progress = 0;
+      completed = false;
+    } else if (newTask.status === 'In Progress') {
+       progress = progress > 0 ? progress : 50;
       completed = false;
     }
 
@@ -1069,24 +1119,24 @@ export default function TaskManager({ user }) {
   };
 
   const deleteTask = async (id) => {
-    if (!isAdmin) return;
-    if (!window.confirm('Are you sure you want to delete this task?')) return;
-
-    try {
-      const response = await apiRequest(`http://localhost:3001/tasks/${id}`, {
-        method: 'DELETE'
-      });
-      
-      if (response.ok) {
-        setTasks(tasks.filter(t => t.id !== id));
-      } else {
-        const error = await response.json();
-        alert('Error deleting task: ' + error.error);
-      }
-    } catch (error) {
-      alert('Network error: ' + error.message);
+  if (!isAdmin) return;
+  
+  try {
+    const response = await apiRequest(`http://localhost:3001/tasks/${id}`, {
+      method: 'DELETE'
+    });
+    
+    if (response.ok) {
+      setTasks(tasks.filter(t => t.id !== id));
+      setDeleteModal({ isOpen: false, taskId: null, taskName: '' });
+    } else {
+      const error = await response.json();
+      alert('Error deleting task: ' + error.error);
     }
-  };
+  } catch (error) {
+    alert('Network error: ' + error.message);
+  }
+};
 
   const toggleComplete = async (id) => {
     const task = tasks.find(t => t.id === id);
@@ -1145,22 +1195,22 @@ export default function TaskManager({ user }) {
   };
 
   const updateTaskProgress = async (taskId, newProgress) => {
-    const task = tasks.find(t => t.id === taskId);
-    if (!task) return;
+  const task = tasks.find(t => t.id === taskId);
+  if (!task) return;
 
-    let newStatus = task.status;
-    let newCompleted = task.completed;
-    
-    if (newProgress === 0) {
-      newStatus = 'To Do';
-      newCompleted = false;
-    } else if (newProgress === 100) {
-      newStatus = 'Done';
-      newCompleted = true;
-    } else if (newProgress > 0 && newProgress < 100) {
-      newStatus = 'In Progress';
-      newCompleted = false;
-    }
+  let newStatus = task.status;
+  let newCompleted = task.completed;
+  
+  if (newProgress === 0) {
+    newStatus = 'To Do';
+    newCompleted = false;
+  } else if (newProgress === 100) {
+    newStatus = 'Done';
+    newCompleted = true;
+  } else if (newProgress > 0 && newProgress < 100) {
+    newStatus = 'In Progress';
+    newCompleted = false;
+  }
 
     const payload = {
       ...task,
@@ -1364,9 +1414,12 @@ export default function TaskManager({ user }) {
   return (
     <div className="max-w-full mx-auto p-6 bg-white/95 min-h-screen font-sans">
       {/* Header */}
-      <div className="bg-[#2563eb] rounded-xl p-6 text-white mb-8 shadow-[0_8px_24px_rgba(37,99,235,0.18)]">  
-        <h2 className="font-normal text-3xl my-2 text-white">Welcome back, {user?.name || 'User'}!</h2>
-        <p className="opacity-90 m-0 text-white">
+      <div className="bg-gradient-to-r from-[#2563eb] to-[#8b5cf6] rounded-xl p-6 text-white mb-8 shadow-xl animate-slideInDown relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20" />
+        <h2 className="font-normal text-3xl my-2 text-white relative z-10 flex items-center gap-3">
+          <Calendar size={32} className="animate-bounce" /> Welcome back, {user?.name || 'User'}!
+        </h2>
+        <p className="opacity-90 m-0 text-white relative z-10">
           {totalTasks === 0
             ? 'No tasks yet'
             : `${completedCount} of ${totalTasks} tasks completed`}
@@ -1436,14 +1489,14 @@ export default function TaskManager({ user }) {
 
           <div>
             <input
-              type="date"
-              value={newTask.deadline}
-              onChange={e => setNewTask({ ...newTask, deadline: e.target.value })}
-              className={`p-3 px-4 border-2 rounded-lg text-base outline-none transition-all duration-200 bg-white text-[#2563eb] min-w-[120px] h-[46px] ${
-                formErrors.deadline ? 'border-red-600 shadow-[0_0_0_2px_rgba(220,38,38,0.2)]' : 'border-gray-200 focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]'
-              }`}
-              min={new Date().toISOString().split('T')[0]}
-            />
+            type="date"
+            value={newTask.deadline}
+            onChange={e => setNewTask({ ...newTask, deadline: e.target.value })}
+            className={`p-3 px-4 border-2 rounded-lg text-base outline-none transition-all duration-200 bg-white text-slate-700 min-w-[120px] h-[46px] ${
+              formErrors.deadline ? 'border-red-600 shadow-[0_0_0_2px_rgba(220,38,38,0.2)]' : 'border-gray-200 focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)]'
+            }`}
+            min={new Date().toISOString().split('T')[0]}
+          />
             {formErrors.deadline && <span className="text-red-600 text-xs mt-1 block">{formErrors.deadline}</span>}
           </div>
 
@@ -1463,7 +1516,7 @@ export default function TaskManager({ user }) {
             {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
 
-          <button onClick={addTask} className="px-5 py-3 bg-[#2563eb] text-white border-none rounded-lg cursor-pointer flex items-center gap-2 text-base font-semibold transition-all duration-200 shadow-[0_4px_8px_rgba(37,99,235,0.12)] hover:bg-[#2563eb] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(37,99,235,0.18)]">
+          <button onClick={addTask} className="px-5 py-3 bg-[#2563eb] text-white border-none rounded-lg cursor-pointer flex items-center gap-2 text-base font-semibold transition-all duration-200 shadow-[0_4px_8px_rgba(37,99,235,0.12)] hover:bg-[#2563eb] hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(37,99,235,0.18)] hover:scale-105 active:scale-95">
             <Plus size={20} /> Add
           </button>
         </div>
@@ -1538,7 +1591,7 @@ export default function TaskManager({ user }) {
           )}
         </div>
       )}
-
+            
       {/* Filter and Search Section */}
       <div className="mb-6 flex flex-col gap-4">
         {/* Search Bar */}
@@ -1563,29 +1616,32 @@ export default function TaskManager({ user }) {
 
         {/* Filter Controls */}
         <div className="flex justify-center items-center gap-6 flex-wrap">
-          <button 
+        <button 
             onClick={() => setShowFilterModal(true)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[#2563eb] text-white border-none rounded-lg cursor-pointer text-sm font-semibold transition-all duration-200 shadow-[0_2px_6px_rgba(37,99,235,0.12)] hover:bg-[#2563eb] hover:-translate-y-px hover:shadow-[0_4px_10px_rgba(37,99,235,0.18)]"
+            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#8b5cf6] to-[#6d28d9] text-white border-none rounded-lg cursor-pointer text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-px active:scale-95"
           >
+            <Filter size={16} />
             Filters
             {(filter !== 'All' || priorityFilter !== 'All' || 
               assigneeFilter !== 'All' || deadlineFilter !== 'All') && (
-              <span className="bg-red-600 text-white px-2 py-0.5 rounded-xl text-[11px] font-bold">Active</span>
+              <span className="bg-white text-purple-600 px-2 py-0.5 rounded-full text-[10px] font-bold ml-1">
+                {[filter, priorityFilter, assigneeFilter, deadlineFilter].filter(f => f !== 'All').length}
+              </span>
             )}
           </button>
 
           <div className="flex items-center gap-2 whitespace-nowrap">
-            <label className="font-semibold text-[#2563eb] text-sm whitespace-nowrap min-w-fit">Per page:</label>
-            <select
-              value={itemsPerPage}
-              onChange={e => handleItemsPerPageChange(Number(e.target.value))}
-              className="py-2.5 px-3.5 rounded-lg border-2 border-gray-200 bg-white text-sm text-[#2563eb] outline-none transition-all duration-200 cursor-pointer min-w-[140px] font-medium focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)] hover:border-[#2563eb]"
-            >
-              {ITEMS_PER_PAGE_OPTIONS.map(num => (
-                <option key={num} value={num}>{num}</option>
-              ))}
-            </select>
-          </div>
+          <label className="font-semibold text-slate-700 text-sm whitespace-nowrap min-w-fit">Per page:</label>
+          <select
+            value={itemsPerPage}
+            onChange={e => handleItemsPerPageChange(Number(e.target.value))}
+            className="py-2.5 px-3.5 rounded-lg border-2 border-gray-300 bg-white text-sm text-slate-700 outline-none transition-all duration-200 cursor-pointer min-w-[80px] font-medium focus:border-[#2563eb] focus:shadow-[0_0_0_2px_rgba(37,99,235,0.12)] hover:border-[#2563eb]"
+          >
+            {ITEMS_PER_PAGE_OPTIONS.map(num => (
+              <option key={num} value={num}>{num}</option>
+            ))}
+          </select>
+        </div>
         </div>
 
         {/* Search Results Info */}
@@ -1609,7 +1665,7 @@ export default function TaskManager({ user }) {
             </p>
           </div>
         ) : (
-          currentTasks.map(task => {
+          currentTasks.map((task, index) => {
             const isOverdue = (() => {
               if (!task.deadline || task.completed) return false;
               const deadlineDate = new Date(task.deadline);
@@ -1622,10 +1678,18 @@ export default function TaskManager({ user }) {
             return (
               <div
                 key={task.id}
-                className={`relative flex items-center gap-3 p-4 border-2 border-[#2563eb]/20 rounded-xl transition-all duration-200 bg-white/90 shadow-[0_4px_12px_rgba(39,55,77,0.1)] max-w-[400px] min-w-[300px] hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(39,55,77,0.2)] hover:border-[#2563eb] ${
-                  task.completed ? 'bg-gradient-to-br from-[#2563eb] to-[#2563eb] border-[#2563eb] text-white' : ''
-                } ${editingId === task.id ? 'editing z-[9999]' : 'z-10'} ${selectedTaskIds.includes(task.id) ? 'selected' : ''} ${isOverdue && !isAdmin ? 'overdue' : ''} ${isAdmin && isOverdue ? 'overdue admin-view border-2 border-red-600 bg-red-600/5' : ''}`}
+                className={`relative flex items-center gap-3 p-4 border-2 rounded-xl transition-all duration-200 shadow-[0_4px_12px_rgba(39,55,77,0.1)] max-w-[400px] min-w-[300px] animate-fadeInUp ${
+                  task.completed 
+                    ? 'bg-gradient-to-br from-green-50 to-green-100/50 border-green-300 opacity-100' 
+                    : isAdmin && isOverdue
+                    ? 'border-red-600 bg-red-50'
+                    : isOverdue && !isAdmin
+                    ? 'border-[#2563eb]/20 bg-white/90'
+                    : 'border-[#2563eb]/20 bg-white/90 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(39,55,77,0.2)] hover:border-[#2563eb]'
+                } ${editingId === task.id ? 'editing z-[9999]' : 'z-10'} ${selectedTaskIds.includes(task.id) ? 'selected' : ''}`}
+                style={{ animationDelay: `${index * 0.05}s` }}
               >
+
                 {isOverdue && !isAdmin && (
                   <>
                     <div className="absolute inset-0 bg-white/15 backdrop-blur-[1px] rounded-xl z-[1]" />
@@ -1635,18 +1699,18 @@ export default function TaskManager({ user }) {
                   </>
                 )}
                 {isAdmin && isOverdue && (
-                  <div className="absolute -top-2.5 right-2.5 bg-red-600 text-white px-3 py-1 rounded-xl text-[11px] font-bold z-[5]">
+                  <div className="absolute -top-2.5 right-2.5 bg-red-600 text-white px-3 py-1 rounded-xl text-[11px] font-bold z-[5] animate-pulse-glow">
                     OVERDUE
                   </div>
                 )}
                 <button
                   onClick={() => toggleComplete(task.id)}
-                  className={`w-6 h-6 rounded-full border-2 border-slate-500 bg-transparent cursor-pointer flex items-center justify-center transition-all duration-200 hover:border-[#2563eb] ${
-                    task.completed ? 'bg-gradient-to-br from-[#2563eb] to-[#2563eb] border-[#2563eb] text-white' : ''
+                  className={`w-6 h-6 rounded-full border-2 border-slate-500 bg-transparent cursor-pointer flex items-center justify-center transition-all duration-200 hover:border-[#2563eb] hover:scale-110 active:scale-90 ${
+                    task.completed ? 'bg-gradient-to-br from-[#2563eb] to-[#2563eb] border-[#2563eb] text-white animate-checkBounce' : ''
                   } ${isOverdue && !isAdmin ? 'opacity-60 cursor-not-allowed' : ''}`}
                   disabled={isOverdue && !isAdmin}
                 >
-                  {task.completed && <Check size={16} />}
+                  {task.completed && <Check size={16} className="animate-checkmark" />}
                 </button>
                 <div className="flex-1 w-full pr-2">
                 {editingId === task.id && isAdmin ? (
@@ -1730,31 +1794,31 @@ export default function TaskManager({ user }) {
                   ) : (
                     <div>
                       <div onClick={() => openTaskDetails(task)} className="cursor-pointer">
-                        <span className={`text-[#2563eb] break-words ${task.completed ? 'line-through text-slate-500' : ''}`}>
-                          <strong>{task.text}</strong>
-                        </span>
-                        <div className="mt-2 p-2 px-3 bg-slate-200/20 rounded-lg text-sm text-[#2563eb] leading-relaxed break-words">
-                          <span className="block mb-1 break-words">
-                            <b className="text-[#64748b]">Description:</b> {task.description || 'No description'}
-                          </span>
-                          <span className="block mb-1 break-words">
-                            <b className="text-[#64748b]">Assignee:</b> {
-                              task.assigneeNames && task.assigneeNames.length > 0 
-                                ? task.assigneeNames.join(', ')
-                                : (task.assignees?.map(id => getMemberNameById(id, task)).join(', ') || 'Unassigned')
-                            }
-                          </span>
-                          <span className="block mb-1 break-words">
-                            <b className="text-[#64748b]">Deadline:</b> {task.deadline || 'None'}
-                          </span>
-                          <span className="block mb-1 break-words">
-                            <b className="text-[#64748b]">Priority:</b> {task.priority}
-                          </span>
-                          <span className="block mb-0 break-words">
-                            <b className="text-[#64748b]">Status:</b> {task.status}
-                          </span>
-                        </div>
-                      </div>
+                    <span className={`text-[#1e293b] break-words font-semibold ${task.completed ? 'line-through text-slate-500' : ''}`}>
+                      <strong>{task.text}</strong>
+                    </span>
+                    <div className="mt-2 p-2 px-3 bg-slate-50 rounded-lg text-sm leading-relaxed break-words border border-slate-200">
+                    <span className="block mb-1 break-words">
+                      <b className="text-blue-600">Description:</b> <span className="text-[#1e293b]">{task.description || 'No description'}</span>
+                    </span>
+                      <span className="block mb-1 break-words">
+                        <b className="text-purple-600">Assignee:</b> <span className="text-[#1e293b]">{
+                          task.assigneeNames && task.assigneeNames.length > 0 
+                            ? task.assigneeNames.join(', ')
+                            : (task.assignees?.map(id => getMemberNameById(id, task)).join(', ') || 'Unassigned')
+                        }</span>
+                      </span>
+                      <span className="block mb-1 break-words">
+                        <b className="text-orange-600">Deadline:</b> <span className="text-[#1e293b]">{task.deadline || 'None'}</span>
+                      </span>
+                      <span className="block mb-1 break-words">
+                        <b className="text-red-600">Priority:</b> <span className="text-[#1e293b]">{task.priority}</span>
+                      </span>
+                      <span className="block mb-0 break-words">
+                        <b className="text-green-600">Status:</b> <span className="text-[#1e293b]">{task.status}</span>
+                      </span>
+                    </div>
+                  </div>
 
                       <TaskProgressBar 
                         progress={task.progress || 0}
@@ -1778,7 +1842,10 @@ export default function TaskManager({ user }) {
                         <button onClick={() => startEditing(task)} className="p-2 bg-transparent border-none rounded-lg cursor-pointer transition-all duration-200 flex items-center justify-center text-[#2563eb] hover:bg-[#2563eb]/10">
                           <Edit2 size={16} />
                         </button>
-                        <button onClick={() => deleteTask(task.id)} className="p-2 bg-transparent border-none rounded-lg cursor-pointer transition-all duration-200 flex items-center justify-center text-red-600 hover:bg-red-100">
+                        <button 
+                          onClick={() => setDeleteModal({ isOpen: true, taskId: task.id, taskName: task.text })} 
+                          className="p-2 bg-transparent border-none rounded-lg cursor-pointer transition-all duration-200 flex items-center justify-center text-red-600 hover:bg-red-100"
+                        >
                           <Trash2 size={16} />
                         </button>
                       </>
@@ -1810,7 +1877,7 @@ export default function TaskManager({ user }) {
             <span>{Math.round(progress)}% ({completedCount}/{totalTasks})</span>
           </div>
           <div className="w-full bg-slate-400/20 rounded-full h-2.5">
-            <div className="bg-[#2563eb] h-2.5 rounded-full transition-[width] duration-300 shadow-[0_2px_6px_rgba(37,99,235,0.3)]" style={{ width: `${progress}%` }} />
+            <div className="bg-gradient-to-r from-[#2563eb] to-[#3b82f6] h-2.5 rounded-full transition-[width] duration-300 shadow-[0_2px_6px_rgba(139,92,246,0.3)]" style={{ width: `${progress}%` }} />
           </div>
         </div>
       )}
@@ -1833,6 +1900,14 @@ export default function TaskManager({ user }) {
         />
       )}
 
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, taskId: null, taskName: '' })}
+        onConfirm={() => deleteTask(deleteModal.taskId)}
+        taskName={deleteModal.taskName}
+      />
+      {/* Styles for animations and responsiveness */}
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; }
@@ -1859,6 +1934,80 @@ export default function TaskManager({ user }) {
             opacity: 1;
             transform: translateY(0);
           }
+        }
+
+        /* NEW CUSTOM ANIMATIONS */
+        
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes slideInDown {
+          from {
+            opacity: 0;
+            transform: translateY(-30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes pulse-glow {
+          0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
+          }
+          50% {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px 5px rgba(220, 38, 38, 0);
+          }
+        }
+
+        @keyframes checkBounce {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.2); }
+        }
+
+        @keyframes checkmark {
+          0% {
+            transform: scale(0) rotate(-45deg);
+            opacity: 0;
+          }
+          50% {
+            transform: scale(1.2) rotate(0deg);
+          }
+          100% {
+            transform: scale(1) rotate(0deg);
+            opacity: 1;
+          }
+        }
+
+        .animate-fadeInUp {
+          animation: fadeInUp 0.4s ease-out both;
+        }
+
+        .animate-slideInDown {
+          animation: slideInDown 0.5s ease-out;
+        }
+
+        .animate-pulse-glow {
+          animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        .animate-checkBounce {
+          animation: checkBounce 0.3s ease-in-out;
+        }
+
+        .animate-checkmark {
+          animation: checkmark 0.3s ease-out;
         }
 
         /* Responsive styles */

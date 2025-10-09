@@ -98,19 +98,19 @@ export default function TaskManagerLogin() {
 
         {/* Decorative circles */}
         <div
-          className="absolute top-0 right-0 w-96 h-96 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"
-          style={{ background: 'rgba(37, 99, 235, 0.12)' }}
+          className="absolute top-0 right-0 w-96 h-96 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 animate-float"
+          style={{ background: 'black' }}
         ></div>
         <div
-          className="absolute bottom-0 left-0 w-80 h-80 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"
-          style={{ background: 'rgba(37, 99, 235, 0.08)' }}
+          className="absolute bottom-0 left-0 w-80 h-80 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 animate-float-delayed"
+          style={{ background: 'black' }}
         ></div>
 
         <div className="relative z-10">
           {/* Logo */}
           <div className="flex items-center gap-3 mb-16">
             <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center"
+              className="w-12 h-12 rounded-xl flex items-center justify-center animate-pulse-slow"
               style={{ background: 'linear-gradient(135deg, #2563eb 0%, #1e3a5f 100%)' }}
             >
               <CheckCircle2 className="text-white" size={28} />
@@ -129,8 +129,8 @@ export default function TaskManagerLogin() {
             </p>
 
             {/* Features */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 animate-slideInLeft" style={{ animationDelay: '0.1s' }}>
                 <div
                   className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
                   style={{ background: 'rgba(37, 99, 235, 0.12)' }}
@@ -139,13 +139,13 @@ export default function TaskManagerLogin() {
                 </div>
                 <span className="text-[#f1f5f9]">Real-time task synchronization</span>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 animate-slideInLeft" style={{ animationDelay: '0.2s' }}>
                 <div className="w-8 h-8 bg-indigo-500/20 rounded-full flex items-center justify-center flex-shrink-0">
                   <CheckCircle2 className="text-indigo-300" size={18} />
                 </div>
                 <span className="text-[#f1f5f9]">Advanced priority management</span>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 animate-slideInLeft" style={{ animationDelay: '0.3s' }}>
                 <div className="w-8 h-8 bg-indigo-500/20 rounded-full flex items-center justify-center flex-shrink-0">
                   <CheckCircle2 className="text-indigo-300" size={18} />
                 </div>
@@ -159,8 +159,7 @@ export default function TaskManagerLogin() {
       </div>
 
       {/* Right Panel - Login Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gradient-to-br from-[#f8fafc] to-[#f8fafc]">
-        <div className="w-full max-w-md">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gradient-to-br from-[#f8fafc] to-[#f8fafc] animate-fadeIn">        <div className="w-full max-w-md">
           {/* Welcome Text */}
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-[#1e293b] mb-2">Welcome back!</h2>
@@ -171,7 +170,7 @@ export default function TaskManagerLogin() {
           <div className="space-y-5">
             {/* Error Message Banner */}
             {errors.submit && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm animate-shake">
                 {errors.submit}
               </div>
             )}
@@ -272,6 +271,71 @@ export default function TaskManagerLogin() {
               <div className="relative flex justify-center text-sm">
                 <span className="px-4 bg-[#f8fafc] text-[#64748b]">or continue with</span>
               </div>
+              <style>{`
+        @keyframes float {
+                0%, 100% { transform: translateY(0px) translateX(0px); }
+                50% { transform: translateY(-20px) translateX(10px); }
+              }
+              
+              @keyframes float-delayed {
+                0%, 100% { transform: translateY(0px) translateX(0px); }
+                50% { transform: translateY(20px) translateX(-10px); }
+              }
+              
+              @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+              }
+              
+              @keyframes slideInLeft {
+                from { opacity: 0; transform: translateX(-30px); }
+                to { opacity: 1; transform: translateX(0); }
+              }
+              
+              @keyframes pulse-slow {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+              }
+              
+              @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+                20%, 40%, 60%, 80% { transform: translateX(5px); }
+              }
+              
+              .animate-float {
+                animation: float 6s ease-in-out infinite;
+              }
+              
+              .animate-float-delayed {
+                animation: float-delayed 8s ease-in-out infinite;
+              }
+              
+              .animate-fadeIn {
+                animation: fadeIn 0.6s ease-out;
+              }
+              
+              .animate-slideInLeft {
+                animation: slideInLeft 0.6s ease-out both;
+              }
+              
+              .animate-pulse-slow {
+                animation: pulse-slow 3s ease-in-out infinite;
+              }
+              
+              .animate-shake {
+                animation: shake 0.5s ease-in-out;
+              }
+              
+              input:focus {
+                transform: translateY(-2px);
+                transition: all 0.3s ease;
+              }
+              
+              button:active {
+                transform: scale(0.98);
+              }
+            `}</style>
             </div>
 
             {/* Social Login Buttons */}

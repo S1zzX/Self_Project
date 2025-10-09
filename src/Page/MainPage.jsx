@@ -7,6 +7,35 @@ import Sidebar from "../Components/Sidebar.jsx";
 import Chat from "./Chat.jsx";
 import UserProfile from "./UserProfile.jsx"; 
 
+
+
+// =====================
+// Typewriter Effect Component
+// =====================
+function TypewriterText({ text, speed = 100 }) {
+  const [displayedText, setDisplayedText] = useState('');
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (currentIndex < text.length) {
+      const timeout = setTimeout(() => {
+        setDisplayedText(prev => prev + text[currentIndex]);
+        setCurrentIndex(prev => prev + 1);
+      }, speed);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [currentIndex, text, speed]);
+
+  return (
+    <span>
+      {displayedText}
+      {currentIndex < text.length && (
+        <span className="animate-pulse">|</span>
+      )}
+    </span>
+  );
+}
 // =====================
 // Company Introduction Section
 // =====================
@@ -72,7 +101,7 @@ function CompanyIntro({ user, setSidebarVisible, onGetStarted }) {
           </div>
 
           <h1 className="text-5xl font-bold mb-4" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)' }}>
-            TaskFlow Solutions
+              <TypewriterText text="Task Management Solutions" />
           </h1>
           <p className="text-2xl font-light mb-6 opacity-90 text-[#f1f5f9]">
             Transforming Business Operations Through Innovation

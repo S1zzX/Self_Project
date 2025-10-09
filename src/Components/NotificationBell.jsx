@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Bell, X, CheckCheck, GripVertical, MailOpen, Mail } from 'lucide-react';
-import { useNotifications } from '../hook/useNotifications'; // Add this import
+import { useNotifications } from '../hook/useNotifications';
 
 const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -9,7 +9,6 @@ const NotificationBell = () => {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const dropdownRef = useRef(null);
   
-  // Use the actual hook instead of mock data
   const { 
     notifications, 
     unreadCount, 
@@ -148,62 +147,131 @@ const NotificationBell = () => {
 
   return (
     <div className="relative">
-      {/* Bell Button */}
+      {/* Bell Button with Enhanced Animations */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`rounded-full w-12 h-12 flex items-center justify-center cursor-pointer transition-all duration-300 relative ${
-            unreadCount > 0
-              ? 'bg-red-600/10 border border-red-600/30 hover:bg-red-600/20'
-              : 'bg-[#2563eb]/10 border border-[#e2e8f0] hover:bg-[#2563eb]/12'
-          } hover:-translate-y-0.5 hover:shadow-lg`}
-          style={{ color: '#2563eb' }}
+        className={`rounded-full w-12 h-12 flex items-center justify-center cursor-pointer relative
+          transition-all duration-300 ease-out
+          ${unreadCount > 0
+            ? 'bg-red-600/10 border border-red-600/30 hover:bg-red-600/20 hover:border-red-600/50'
+            : 'bg-[#2563eb]/10 border border-[#e2e8f0] hover:bg-[#2563eb]/20'
+          }
+          hover:-translate-y-1 hover:shadow-xl
+          active:scale-95 active:shadow-md
+          group`}
+        style={{ color: '#2563eb' }}
       >
-        <Bell size={24} className={unreadCount > 0 ? 'animate-pulse text-red-600' : 'text-[#2563eb]'} />
+        {/* Bell Icon with Swing Animation on Hover */}
+        <Bell 
+          size={24} 
+          className={`transition-all duration-300
+            ${unreadCount > 0 ? 'text-red-600' : 'text-[#2563eb]'}
+            group-hover:animate-[swing_0.6s_ease-in-out]`}
+        />
+        
+        {/* Badge with Pop Animation */}
         {unreadCount > 0 && (
           <span 
-            className="absolute -top-1.5 -right-1.5 bg-[#1e293b] text-white rounded-full w-5 h-5 text-xs font-bold flex items-center justify-center border-2 animate-pulse"
-                    style={{ borderWidth: '2px', borderStyle: 'solid', borderColor: '#1e293b' }}
+            className="absolute -top-1.5 -right-1.5 bg-[#1e293b] text-white rounded-full 
+              w-5 h-5 text-xs font-bold flex items-center justify-center border-2
+              animate-[bounce_1s_ease-in-out_infinite]
+              shadow-lg shadow-slate-900/50"
+            style={{ borderWidth: '2px', borderStyle: 'solid', borderColor: '#1e293b' }}
           >
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
+        
+        {/* Ripple Effect */}
+        {unreadCount > 0 && (
+          <span className="absolute inset-0 rounded-full bg-red-600/20 animate-ping" />
+        )}
       </button>
+
+      {/* Custom Keyframes for Swing Animation */}
+      <style>{`
+        @keyframes swing {
+          0%, 100% { transform: rotate(0deg); }
+          25% { transform: rotate(15deg); }
+          50% { transform: rotate(-10deg); }
+          75% { transform: rotate(5deg); }
+        }
+        
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-20px) scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+        
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        @keyframes slideInRight {
+          from {
+            opacity: 0;
+            transform: translateX(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+      `}</style>
 
       {isOpen && (
         <>
-          {/* Overlay */}
+          {/* Overlay with Fade In */}
           <div
             onClick={() => setIsOpen(false)}
-            className="fixed inset-0 bg-black/40 z-[999] backdrop-blur-sm animate-fade-in"
+            className="fixed inset-0 bg-black/40 z-[999] backdrop-blur-sm"
+            style={{ animation: 'fadeIn 0.3s ease-out' }}
           />
           
-          {/* Dropdown */}
+          {/* Dropdown with Slide Down Animation */}
           <div
             ref={dropdownRef}
             onMouseDown={handleMouseDown}
             onTouchStart={handleTouchStart}
-            className={`fixed z-[1000] w-[400px] max-w-[90vw] max-h-[500px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-transform ${
-              isDragging ? 'cursor-grabbing scale-105' : 'cursor-default'
-            }`}
+            className={`fixed z-[1000] w-[400px] max-w-[90vw] max-h-[500px] 
+              bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden
+              transition-all duration-300 ease-out
+              ${isDragging ? 'cursor-grabbing scale-105 shadow-3xl' : 'cursor-default'}`}
             style={{
               left: `${position.x}px`,
               top: `${position.y}px`,
               boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.1)',
-              touchAction: 'none'
+              touchAction: 'none',
+              animation: 'slideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
             }}
           >
-            {/* Drag Handle */}
+            {/* Drag Handle with Gradient Animation */}
             <div
-              className="drag-handle py-3.5 px-5 flex items-center justify-center gap-2.5 cursor-grab active:cursor-grabbing border-b-2 select-none min-h-[48px]"
-                style={{
-                  background: 'linear-gradient(135deg, #123F66, #2F6FA6)',
-                  borderBottomWidth: '2px',
-                  borderBottomStyle: 'solid',
-                  borderBottomColor: 'rgba(93,140,207,0.22)'
-                }}
+              className="drag-handle py-3.5 px-5 flex items-center justify-center gap-2.5 
+                cursor-grab active:cursor-grabbing border-b-2 select-none min-h-[48px]
+                transition-all duration-300"
+              style={{
+                background: 'linear-gradient(135deg, #123F66, #2F6FA6)',
+                borderBottomWidth: '2px',
+                borderBottomStyle: 'solid',
+                borderBottomColor: 'rgba(93,140,207,0.22)'
+              }}
             >
-              <GripVertical size={20} className="opacity-80" style={{ color: '#DDE6ED' }} />
-              <span className="text-[13px] font-medium opacity-90 tracking-wide" style={{ color: '#DDE6ED' }}>
+              <GripVertical 
+                size={20} 
+                className="opacity-80 transition-transform duration-300 hover:scale-110" 
+                style={{ color: '#DDE6ED' }} 
+              />
+              <span 
+                className="text-[13px] font-medium opacity-90 tracking-wide" 
+                style={{ color: '#DDE6ED' }}
+              >
                 Drag to move
               </span>
             </div>
@@ -219,16 +287,19 @@ const NotificationBell = () => {
               {notifications.length > 0 && (
                 <button
                   onClick={markAllAsRead}
-                  className="rounded-md px-2.5 py-2 flex items-center gap-1 min-h-[32px] transition-all duration-200 hover:scale-105"
+                  className="rounded-md px-2.5 py-2 flex items-center gap-1 min-h-[32px] 
+                    transition-all duration-300 ease-out
+                    hover:scale-110 hover:rotate-12
+                    active:scale-95"
                   style={{
-                        background: 'rgba(37,99,235,0.08)',
-                        borderWidth: '1px',
-                        borderStyle: 'solid',
-                        borderColor: 'rgba(37,99,235,0.12)',
-                        color: '#1e293b'
-                      }}
+                    background: 'rgba(37,99,235,0.08)',
+                    borderWidth: '1px',
+                    borderStyle: 'solid',
+                    borderColor: 'rgba(37,99,235,0.12)',
+                    color: '#1e293b'
+                  }}
                 >
-                  <CheckCheck size={16} />
+                  <CheckCheck size={16} className="transition-transform duration-300" />
                 </button>
               )}
             </div>
@@ -237,25 +308,37 @@ const NotificationBell = () => {
             <div className="overflow-y-auto flex-1 bg-[#f8fafc] min-h-[200px]">
               {notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-15 px-5 text-[#64748b] text-center min-h-[200px]">
-                  <Bell size={40} className="text-[#cbd5e1] mb-4" />
-                  <p className="m-0 text-sm font-medium text-[#64748b]">No notifications yet</p>
+                  <Bell 
+                    size={40} 
+                    className="text-[#cbd5e1] mb-4 animate-[swing_2s_ease-in-out_infinite]" 
+                  />
+                  <p className="m-0 text-sm font-medium text-[#64748b] animate-pulse">
+                    No notifications yet
+                  </p>
                 </div>
               ) : (
                 notifications
                   .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-                  .map(notification => (
+                  .map((notification, index) => (
                     <div
                       key={notification.id}
-                      className={`py-3.5 px-4 border-b border-black/5 transition-all duration-200 ${
-                            notification.read
-                              ? 'bg-white opacity-95'
-                              : 'bg-[#e6f0ff] border-l-4 border-l-[#2563eb]'
-                          }`}
+                      className={`py-3.5 px-4 border-b border-black/5 
+                        transition-all duration-300 ease-out
+                        hover:translate-x-1 hover:shadow-md
+                        ${notification.read
+                          ? 'bg-white opacity-95 hover:bg-gray-50'
+                          : 'bg-[#e6f0ff] border-l-4 border-l-[#2563eb] hover:bg-blue-50'
+                        }`}
+                      style={{
+                        animation: `slideInRight 0.4s ease-out ${index * 0.05}s backwards`
+                      }}
                     >
                       <div className="flex items-start gap-3">
-                        {/* Priority Indicator */}
+                        {/* Priority Indicator with Pulse */}
                         <div 
-                          className={`w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0 ${getPriorityColor(notification.priority)}`}
+                          className={`w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0 
+                            ${getPriorityColor(notification.priority)}
+                            ${!notification.read ? 'animate-pulse' : ''}`}
                           style={{ boxShadow: `0 0 8px currentColor` }}
                         />
                         
@@ -269,12 +352,17 @@ const NotificationBell = () => {
                           </span>
                         </div>
 
-                        {/* Action Buttons */}
+                        {/* Action Buttons with Enhanced Hover Effects */}
                         <div className="flex gap-1">
                           {/* Toggle Read/Unread */}
                           <button
                             onClick={() => markAsRead(notification.id)}
-                            className="bg-transparent border-none text-[#64748b] cursor-pointer p-1.5 rounded transition-all duration-200 flex items-center justify-center min-w-[28px] min-h-[28px] hover:bg-[#2563eb]/10 hover:text-[#2563eb] hover:scale-110"
+                            className="bg-transparent border-none text-[#64748b] cursor-pointer p-1.5 
+                              rounded transition-all duration-300 ease-out
+                              flex items-center justify-center min-w-[28px] min-h-[28px] 
+                              hover:bg-[#2563eb]/10 hover:text-[#2563eb] 
+                              hover:scale-125 hover:rotate-12
+                              active:scale-95"
                           >
                             {notification.read ? <Mail size={14} /> : <MailOpen size={14} />}
                           </button>
@@ -282,7 +370,12 @@ const NotificationBell = () => {
                           {/* Delete */}
                           <button
                             onClick={() => clearNotification(notification.id)}
-                            className="bg-transparent border-none text-[#ef4444] cursor-pointer p-1.5 rounded transition-all duration-200 flex items-center justify-center min-w-[28px] min-h-[28px] hover:bg-red-500/10 hover:text-red-600 hover:scale-110"
+                            className="bg-transparent border-none text-[#ef4444] cursor-pointer p-1.5 
+                              rounded transition-all duration-300 ease-out
+                              flex items-center justify-center min-w-[28px] min-h-[28px] 
+                              hover:bg-red-500/10 hover:text-red-600 
+                              hover:scale-125 hover:rotate-90
+                              active:scale-95"
                           >
                             <X size={14} />
                           </button>

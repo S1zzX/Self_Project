@@ -41,6 +41,7 @@ function Sidebar({ userType, user, onSelect, selected, onLogout, visible }) {
         <button
           onClick={() => setMobileOpen((v) => !v)}
           aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+          className="hover:scale-110 active:scale-95 transition-all duration-200"
           style={{
             position: 'fixed',
             left: 12,
@@ -70,6 +71,7 @@ function Sidebar({ userType, user, onSelect, selected, onLogout, visible }) {
       {isMobile && mobileOpen && (
         <div
           onClick={() => setMobileOpen(false)}
+          className="animate-[fadeIn_0.2s_ease-out]"
           style={{
             position: 'fixed',
             left: 0,
@@ -85,10 +87,11 @@ function Sidebar({ userType, user, onSelect, selected, onLogout, visible }) {
       {shouldShowSidebar && (
         <aside
           aria-hidden={!shouldShowSidebar}
-            style={{
+          className="relative overflow-hidden"
+          style={{
             width: isMobile ? '72%' : '300px',
             maxWidth: isMobile ? 400 : 'none',
-            background: '#111827',
+            background: 'linear-gradient(to bottom, #111827, #1f2937, #111827)',
             height: '100vh',
             padding: '24px',
             boxSizing: 'border-box',
@@ -104,10 +107,18 @@ function Sidebar({ userType, user, onSelect, selected, onLogout, visible }) {
             flexDirection: 'column'
           }}
         >
+          {/* Animated Background Gradient */}
+          <div className="
+            absolute inset-0 bg-gradient-to-br from-blue-600/5 via-transparent to-purple-600/5
+            animate-[gradientShift_10s_ease_infinite]
+            pointer-events-none
+          " />
+
           {isMobile && (
             <button
               onClick={() => setMobileOpen(false)}
               aria-label="Close menu"
+              className="hover:scale-110 hover:rotate-12 active:scale-95 transition-all duration-200"
               style={{
                 position: 'absolute',
                 right: 12,
@@ -131,6 +142,7 @@ function Sidebar({ userType, user, onSelect, selected, onLogout, visible }) {
 
           {/* Company Logo */}
           <div
+            className="animate-[slideInDown_0.6s_ease-out]"
             style={{
               display: 'flex',
               flexDirection: 'column',
@@ -144,6 +156,7 @@ function Sidebar({ userType, user, onSelect, selected, onLogout, visible }) {
             }}
           >
             <div
+              className="animate-[float_3s_ease-in-out_infinite] hover:scale-110 hover:rotate-12 transition-all duration-300"
               style={{
                 width: '64px',
                 height: '64px',
@@ -166,6 +179,7 @@ function Sidebar({ userType, user, onSelect, selected, onLogout, visible }) {
               <i className="fa fa-code" />
             </div>
             <div
+              className="animate-[fadeIn_0.8s_ease-out]"
               style={{
                 fontSize: '16px',
                 fontWeight: '600',
@@ -180,6 +194,7 @@ function Sidebar({ userType, user, onSelect, selected, onLogout, visible }) {
 
           {/* Notification Bell */}
           <div
+            className="animate-[fadeIn_1s_ease-out]"
             style={{
               display: 'flex',
               justifyContent: 'center',
@@ -197,21 +212,49 @@ function Sidebar({ userType, user, onSelect, selected, onLogout, visible }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flexGrow: 0 }}>
             {visible && (
               <>
-                <NavButton icon={<ClipboardList size={20} />} label="Dashboard" active={selected === 'dashboard'} onClick={() => handleNavigation('dashboard')} />
-                <NavButton icon={<MessageCircle size={20} />} label="Messages" active={selected === 'chat'} onClick={() => handleNavigation('chat')} />
+                <NavButton 
+                  icon={<ClipboardList size={20} />} 
+                  label="Dashboard" 
+                  active={selected === 'dashboard'} 
+                  onClick={() => handleNavigation('dashboard')} 
+                  delay="0.2s" 
+                />
+                <NavButton 
+                  icon={<MessageCircle size={20} />} 
+                  label="Messages" 
+                  active={selected === 'chat'} 
+                  onClick={() => handleNavigation('chat')} 
+                  delay="0.3s"
+                />
 
                 {userType === 'admin' && (
-                  <NavButton icon={<Users size={20} />} label="Assign Account" active={selected === 'assign'} onClick={() => handleNavigation('assign')} isAdmin />
+                  <NavButton 
+                    icon={<Users size={20} />} 
+                    label="Assign Account" 
+                    active={selected === 'assign'} 
+                    onClick={() => handleNavigation('assign')} 
+                    isAdmin 
+                    delay="0.4s" 
+                  />
                 )}
 
-                {userType !== 'admin' && <NavButton icon={<User size={20} />} label="Profile" active={selected === 'profile'} onClick={() => handleNavigation('profile')} />}
+                {userType !== 'admin' && (
+                  <NavButton 
+                    icon={<User size={20} />} 
+                    label="Profile" 
+                    active={selected === 'profile'} 
+                    onClick={() => handleNavigation('profile')} 
+                    delay="0.5s"
+                  />
+                )}
               </>
             )}
           </div>
 
           {/* User Profile Section */}
-          <div style={{ marginTop: 'auto', paddingTop: '24px' }}>
+          <div className="animate-[slideInUp_0.6s_ease-out]" style={{ marginTop: 'auto', paddingTop: '24px' }}>
             <div
+              className="group"
               style={{
                 background: 'rgba(255, 255, 255, 0.05)',
                 backdropFilter: 'blur(10px)',
@@ -227,9 +270,22 @@ function Sidebar({ userType, user, onSelect, selected, onLogout, visible }) {
                 boxShadow: '0 12px 36px rgba(2,6,23,0.14), inset 0 1px 0 rgba(255, 255, 255, 0.04)'
               }}
             >
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(135deg, #2563eb 0%, #8b5cf6 100%)', opacity: 0.6 }} />
+              {/* Animated Top Border */}
+              <div 
+                className="animate-[shimmer_3s_ease-in-out_infinite]"
+                style={{ 
+                  position: 'absolute', 
+                  top: 0, 
+                  left: 0, 
+                  right: 0, 
+                  height: '2px', 
+                  background: 'linear-gradient(135deg, #2563eb 0%, #8b5cf6 100%)', 
+                  opacity: 0.6 
+                }} 
+              />
 
               <div
+                className="group-hover:scale-110 group-hover:rotate-6 transition-all duration-300"
                 style={{
                   width: '48px',
                   height: '48px',
@@ -255,10 +311,37 @@ function Sidebar({ userType, user, onSelect, selected, onLogout, visible }) {
               </div>
 
               <div style={{ textAlign: 'center' }}>
-                <div style={{ color: '#ffffff', fontWeight: '700', fontSize: '16px', marginBottom: '8px', letterSpacing: '0.5px', textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)' }}>
+                <div 
+                  className="animate-[fadeIn_0.8s_ease-out]"
+                  style={{ 
+                    color: '#ffffff', 
+                    fontWeight: '700', 
+                    fontSize: '16px', 
+                    marginBottom: '8px', 
+                    letterSpacing: '0.5px', 
+                    textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)' 
+                  }}
+                >
                   {user?.name || 'User'}
                 </div>
-                <div style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #2563eb 100%)', color: 'white', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px', padding: '6px 12px', borderRadius: '20px', display: 'inline-block', boxShadow: '0 2px 8px rgba(139,92,246,0.18)', borderWidth: '1px', borderStyle: 'solid', borderColor: 'rgba(255, 255, 255, 0.06)' }}>
+                <div 
+                  className="animate-[pulse_2s_ease-in-out_infinite]"
+                  style={{ 
+                    background: 'linear-gradient(135deg, #8b5cf6 0%, #2563eb 100%)', 
+                    color: 'white', 
+                    fontSize: '11px', 
+                    fontWeight: '600', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '1px', 
+                    padding: '6px 12px', 
+                    borderRadius: '20px', 
+                    display: 'inline-block', 
+                    boxShadow: '0 2px 8px rgba(139,92,246,0.18)', 
+                    borderWidth: '1px', 
+                    borderStyle: 'solid', 
+                    borderColor: 'rgba(255, 255, 255, 0.06)' 
+                  }}
+                >
                   {user?.userType || 'user'}
                 </div>
               </div>
@@ -266,6 +349,7 @@ function Sidebar({ userType, user, onSelect, selected, onLogout, visible }) {
 
             {onLogout && (
               <button
+                className="animate-[fadeIn_1s_ease-out] hover:scale-105 active:scale-95 transition-all duration-300"
                 onClick={async () => {
                   try {
                     const maybePromise = onLogout();
@@ -276,7 +360,7 @@ function Sidebar({ userType, user, onSelect, selected, onLogout, visible }) {
                 }}
                 style={{
                   width: '100%',
-                  background: '#ef4444',
+                  background: 'linear-gradient(135deg, #8b5cf6 0%, #2563eb 100%)',
                   color: 'white',
                   borderWidth: 0,
                   borderStyle: 'none',
@@ -289,34 +373,103 @@ function Sidebar({ userType, user, onSelect, selected, onLogout, visible }) {
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '10px',
-                  boxShadow: '0 6px 18px rgba(239,68,68,0.22), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
+                  boxShadow: '0 6px 18px rgba(139,92,246,0.22), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
                   transition: 'all 0.24s ease'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#dc2626';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.background = '#7c3aed';
+                  e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#ef4444';
-                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.background = 'linear-gradient(135deg, #8b5cf6 0%, #2563eb 100%)';
+                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
                 }}
               >
-                <LogOut size={18} />
+                <LogOut size={18} className="animate-[wiggle_3s_ease-in-out_infinite]" />
                 Logout
               </button>
             )}
           </div>
         </aside>
       )}
+
+      {/* Add CSS Animations */}
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes slideInDown {
+          from {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes slideInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes slideInLeft {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+
+        @keyframes wiggle {
+          0%, 100% { transform: rotate(0deg); }
+          25% { transform: rotate(-5deg); }
+          75% { transform: rotate(5deg); }
+        }
+
+        @keyframes shimmer {
+          0% { 
+            background-position: -200% center;
+            background: linear-gradient(90deg, #2563eb 0%, #8b5cf6 50%, #2563eb 100%);
+            background-size: 200% 100%;
+          }
+          100% { 
+            background-position: 200% center;
+          }
+        }
+
+        @keyframes gradientShift {
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 0.6; }
+        }
+      `}</style>
     </>
   );
 }
 
-function NavButton({ icon, label, active, onClick, isAdmin }) {
+function NavButton({ icon, label, active, onClick, isAdmin, delay = '0s' }) {
   const [isHovered, setIsHovered] = useState(false);
 
   const baseStyle = {
     background: isAdmin ? 'rgba(139, 92, 246, 0.1)' : 'rgba(59, 130, 246, 0.1)',
+    backdropFilter: 'blur(10px)',
     borderWidth: '1px',
     borderStyle: 'solid',
     borderColor: isAdmin ? 'rgba(139, 92, 246, 0.3)' : 'rgba(59, 130, 246, 0.2)',
@@ -333,7 +486,8 @@ function NavButton({ icon, label, active, onClick, isAdmin }) {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    transform: (active || isHovered) ? 'translateX(6px)' : 'translateX(0)'
+    transform: (active || isHovered) ? 'translateX(6px) scale(1.02)' : 'translateX(0) scale(1)',
+    animationDelay: delay
   };
 
   const activeStyle = active
@@ -345,18 +499,57 @@ function NavButton({ icon, label, active, onClick, isAdmin }) {
       }
     : {};
 
-  const hoverStyle = isHovered && !active ? { background: isAdmin ? 'rgba(157, 178, 191, 0.1)' : 'rgba(93,140,207,0.12)', borderColor: isAdmin ? '#9DB2BF' : '#60a5fa', boxShadow: '0 2px 8px rgba(93,140,207,0.18)' } : {};
+  const hoverStyle = isHovered && !active 
+    ? { 
+        background: isAdmin ? 'rgba(157, 178, 191, 0.15)' : 'rgba(93,140,207,0.15)', 
+        borderColor: isAdmin ? '#9DB2BF' : '#60a5fa', 
+        boxShadow: '0 2px 8px rgba(93,140,207,0.18)' 
+      } 
+    : {};
 
   return (
     <button
       onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      className="animate-[slideInLeft_0.5s_ease-out]"
       style={{ ...baseStyle, ...activeStyle, ...hoverStyle }}
     >
-  <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: '3px', background: active ? '#ffffff' : '#60a5fa', transform: active || isHovered ? 'scaleY(1)' : 'scaleY(0)', transition: 'transform 0.3s ease' }} />
-      {icon}
-      {label}
+      {/* Active Indicator Bar */}
+      <div style={{
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        height: '100%',
+        width: '3px',
+        background: active ? '#ffffff' : '#60a5fa',
+        transform: active || isHovered ? 'scaleY(1)' : 'scaleY(0)',
+        transition: 'transform 0.3s ease',
+        transformOrigin: 'top'
+      }} />
+      
+      {/* Icon with rotation animation */}
+      <span style={{
+        transition: 'all 0.3s ease',
+        transform: (active || isHovered) ? 'scale(1.1) rotate(12deg)' : 'scale(1) rotate(0deg)',
+        display: 'flex',
+        alignItems: 'center'
+      }}>
+        {icon}
+      </span>
+      
+      {/* Label */}
+      <span style={{ position: 'relative', zIndex: 10 }}>{label}</span>
+      
+      {/* Hover shimmer effect */}
+      {isHovered && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)',
+          animation: 'shimmerSweep 0.7s ease-in-out'
+        }} />
+      )}
     </button>
   );
 }

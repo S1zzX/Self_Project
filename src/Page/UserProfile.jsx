@@ -1,4 +1,4 @@
-// UserProfile.jsx - Converted to Tailwind CSS
+// UserProfile.jsx - Enhanced with Tailwind CSS Animations
 import React, { useState, useEffect } from 'react';
 import { User as UserIcon, Lock, Mail, Save, Eye, EyeOff, Camera, X } from 'lucide-react';
 import { useAuth } from '../AuthContext';
@@ -266,328 +266,430 @@ export default function UserProfile({ user, onUserChange }) {
   });
 
   return (
-    <div className="max-w-3xl mx-auto p-6 bg-white/95 min-h-screen">
-      {/* Header / Avatar */}
-      <div 
-        className="relative rounded-2xl p-12 text-white mb-8 text-center overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, #2563eb 0%, #8b5cf6 100%)',
-          boxShadow: '0 10px 40px rgba(37,99,235,0.12)'
-        }}
-      >
-        {/* Overlay */}
+    <>
+      {/* Custom Keyframes */}
+      <style>{`
+        @keyframes slideInDown {
+          from {
+            opacity: 0;
+            transform: translateY(-30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes slideInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes scaleIn {
+          from {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+        }
+
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+          20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+
+        @keyframes checkmark {
+          0% { 
+            opacity: 0;
+            transform: scale(0) rotate(-45deg);
+          }
+          100% { 
+            opacity: 1;
+            transform: scale(1) rotate(0deg);
+          }
+        }
+
+        .animate-slideInDown {
+          animation: slideInDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .animate-slideInUp {
+          animation: slideInUp 0.5s ease-out;
+        }
+
+        .animate-fadeIn {
+          animation: fadeIn 0.5s ease-out;
+        }
+
+        .animate-scaleIn {
+          animation: scaleIn 0.4s ease-out;
+        }
+
+        .animate-pulse-custom {
+          animation: pulse 2s ease-in-out infinite;
+        }
+
+        .animate-shake {
+          animation: shake 0.5s ease-in-out;
+        }
+
+        .animate-checkmark {
+          animation: checkmark 0.3s ease-out;
+        }
+      `}</style>
+
+      <div className="max-w-3xl mx-auto p-6 bg-white/95 min-h-screen animate-fadeIn">
+        {/* Header / Avatar */}
         <div 
-          className="absolute inset-0 pointer-events-none"
+          className="relative rounded-2xl p-12 text-white mb-8 text-center overflow-hidden animate-slideInDown shadow-2xl hover:shadow-3xl transition-all duration-500"
           style={{
-            background: 'rgba(255, 255, 255, 0.05)'
-          }}
-        />
-
-        <div className="relative z-10 flex flex-col items-center gap-4 mb-6">
-          <div
-            className="w-30 h-30 rounded-full flex items-center justify-center text-5xl font-bold transition-all duration-300 hover:scale-105"
-            style={{
-              background: user?.profileImage 
-                ? `url(${getProfileImageUrl(user.profileImage)})` 
-                : 'linear-gradient(135deg,#2563eb,#8b5cf6)',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              color: '#ffffff',
-              boxShadow: '0 10px 30px rgba(37,99,235,0.08)',
-              borderWidth: '4px',
-              borderStyle: 'solid',
-              borderColor: 'rgba(255, 255, 255, 0.18)'
-            }}
-          >
-            {!user?.profileImage && (user?.name?.charAt(0).toUpperCase() || 'U')}
-          </div>
-
-          {/* Image Upload Controls */}
-          <div className="flex gap-3 items-center flex-wrap justify-center">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="hidden"
-              id="profile-image-upload"
-              disabled={isLoading}
-            />
-            
-            <label 
-              htmlFor="profile-image-upload" 
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer transition-all duration-300 bg-white/95 text-[#2563eb] hover:bg-white hover:-translate-y-0.5 shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              <Camera size={18} />
-              {user?.profileImage ? 'Change' : 'Upload'}
-            </label>
-
-            {user?.profileImage && (
-              <button 
-                onClick={handleImageDelete} 
-                disabled={isLoading} 
-                className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 bg-red-600/90 text-white hover:bg-red-600 hover:-translate-y-0.5 shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                <X size={18} />
-                Remove
-              </button>
-            )}
-          </div>
-        </div>
-
-        <h1 className="relative z-10 text-3xl font-bold mb-2 drop-shadow-md text-white">
-          {user?.name || 'User'}
-        </h1>
-        <p className="relative z-10 opacity-90 text-base mb-3 text-white/90">
-          {user?.email || 'user@example.com'}
-        </p>
-        <span 
-          className="relative z-10 inline-block px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-wide border"
-          style={{
-            background: user?.userType === 'admin' 
-              ? 'rgba(255, 255, 255, 0.14)'
-              : 'rgba(255, 255, 255, 0.06)',
-            borderWidth: '1px',
-            borderStyle: 'solid',
-            borderColor: 'rgba(255, 255, 255, 0.12)',
-            boxShadow: '0 4px 16px rgba(37,99,235,0.06)'
+            background: 'linear-gradient(135deg, #2563eb 0%, #8b5cf6 100%)',
+            boxShadow: '0 10px 40px rgba(37,99,235,0.12)'
           }}
         >
-          {user?.userType?.toUpperCase() || 'USER'}
-        </span>
-      </div>
+          {/* Animated Background Circles */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 animate-pulse-custom" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24 animate-pulse-custom" style={{ animationDelay: '1s' }} />
+          
+          {/* Overlay */}
+          <div 
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: 'rgba(255, 255, 255, 0.05)'
+            }}
+          />
 
-      {/* Sections */}
-      <div className="flex flex-col gap-6">
-        {/* Account Information */}
-        <div className="bg-white border-2 border-[#e2e8f0] rounded-2xl p-8 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
-          <div className="flex items-center gap-3 text-xl font-bold text-[#2563eb] mb-7 pb-4 border-b-2 border-[#e2e8f0]">
-            <UserIcon size={20} />
-            Account Information
-          </div>
-
-          <div className="mb-6">
-            <label className="block font-semibold text-[#1e293b] mb-2 text-sm uppercase tracking-wide">
-              Full Name
-            </label>
-            <div className="relative flex items-center w-full">
-              <UserIcon size={18} className="absolute left-3.5 text-[#64748b] pointer-events-none" style={{ paddingTop: '11px' }} />
-              <input
-                className={`w-full py-3.5 px-12 border-2 rounded-lg text-base transition-all duration-300 bg-white ${
-                  accountErrors.name 
-                    ? 'border-red-600 shadow-[0_0_0_4px_rgba(220,38,38,0.1)]' 
-                    : 'border-[#e2e8f0] focus:border-[#2563eb] focus:shadow-[0_0_0_8px_rgba(37,99,235,0.06)]'
-                } focus:outline-none`}
-                type="text"
-                value={accountData.name}
-                onChange={(e) => { 
-                  setAccountData({ ...accountData, name: e.target.value }); 
-                  setAccountErrors({ ...accountErrors, name: '' }); 
-                }}
-                placeholder="Enter your full name"
-              />
-            </div>
-            {accountErrors.name && (
-              <span className="text-red-600 text-xs mt-1.5 block font-medium">
-                {accountErrors.name}
-              </span>
-            )}
-          </div>
-
-          <div className="mb-6">
-            <label className="block font-semibold text-[#1e293b] mb-2 text-sm uppercase tracking-wide">
-              Email Address
-            </label>
-            <div className="relative flex items-center w-full">
-              <Mail size={18} className="absolute left-3.5 text-[#64748b] pointer-events-none" style={{ paddingTop: '11px' }} />
-              <input
-                className={`w-full py-3.5 px-12 border-2 rounded-lg text-base transition-all duration-300 bg-white ${
-                  accountErrors.email 
-                    ? 'border-red-600 shadow-[0_0_0_4px_rgba(220,38,38,0.1)]' 
-                    : 'border-[#e2e8f0] focus:border-[#2563eb] focus:shadow-[0_0_0_8px_rgba(37,99,235,0.06)]'
-                } focus:outline-none`}
-                type="email"
-                value={accountData.email}
-                onChange={(e) => { 
-                  setAccountData({ ...accountData, email: e.target.value }); 
-                  setAccountErrors({ ...accountErrors, email: '' }); 
-                }}
-                placeholder="Enter your email"
-              />
-            </div>
-            {accountErrors.email && (
-              <span className="text-red-600 text-xs mt-1.5 block font-medium">
-                {accountErrors.email}
-              </span>
-            )}
-          </div>
-
-          {accountErrors.submit && (
-            <div className="text-red-600 text-sm mb-3 font-medium">
-              {accountErrors.submit}
-            </div>
-          )}
-          {accountSuccess && (
-            <div className="text-green-600 text-sm mb-3 bg-green-600/10 py-3.5 px-4 rounded-lg border border-green-600/25 font-medium">
-              {accountSuccess}
-            </div>
-          )}
-
-          <div className="flex gap-3 justify-end mt-7 pt-6 border-t-2 border-[#e2e8f0]">
-            <button 
-              className="px-7 py-3.5 rounded-lg text-base font-semibold transition-all duration-300 bg-slate-200/50 text-slate-600 border-2 border-slate-200/80 hover:bg-slate-200/80 hover:border-[#2563eb] hover:text-[#2563eb] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0"
-              type="button" 
-              onClick={() => { 
-                setAccountData({ name: user?.name || '', email: user?.email || ''}); 
-                setAccountErrors({}); 
-              }}
-            >
-              Cancel
-            </button>
-            <button 
-              className="flex items-center gap-2 px-7 py-3.5 rounded-lg text-base font-semibold text-white transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none hover:-translate-y-0.5 active:translate-y-0"
+          <div className="relative z-10 flex flex-col items-center gap-4 mb-6">
+            <div
+              className="w-30 h-30 rounded-full flex items-center justify-center text-5xl font-bold transition-all duration-500 hover:scale-110 hover:rotate-6 group relative animate-scaleIn"
               style={{
-                background: 'linear-gradient(135deg,#2563eb,#8b5cf6)',
-                boxShadow: '0 6px 18px rgba(37,99,235,0.16)'
+                background: user?.profileImage 
+                  ? `url(${getProfileImageUrl(user.profileImage)})` 
+                  : 'linear-gradient(135deg,#2563eb,#8b5cf6)',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                color: '#ffffff',
+                boxShadow: '0 10px 30px rgba(37,99,235,0.3)',
+                borderWidth: '4px',
+                borderStyle: 'solid',
+                borderColor: 'rgba(255, 255, 255, 0.18)'
               }}
-              type="button" 
-              disabled={isLoading} 
-              onClick={handleAccountUpdate}
             >
-              <Save size={16} />
-              {isLoading ? 'Saving...' : 'Save Changes'}
-            </button>
+              {!user?.profileImage && (user?.name?.charAt(0).toUpperCase() || 'U')}
+              <div className="absolute inset-0 bg-white/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </div>
+
+            {/* Image Upload Controls */}
+            <div className="flex gap-3 items-center flex-wrap justify-center animate-slideInUp" style={{ animationDelay: '0.2s' }}>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+                id="profile-image-upload"
+                disabled={isLoading}
+              />
+              
+              <label 
+                htmlFor="profile-image-upload" 
+                className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer transition-all duration-300 bg-white/95 text-[#2563eb] hover:bg-white hover:-translate-y-1 hover:scale-105 shadow-md hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed active:scale-95 group"
+              >
+                <Camera size={18} className="transition-transform duration-300 group-hover:rotate-12" />
+                {user?.profileImage ? 'Change' : 'Upload'}
+              </label>
+
+              {user?.profileImage && (
+                <button 
+                  onClick={handleImageDelete} 
+                  disabled={isLoading} 
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-300 bg-red-600/90 text-white hover:bg-red-600 hover:-translate-y-1 hover:scale-105 shadow-md hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed active:scale-95 group"
+                >
+                  <X size={18} className="transition-transform duration-300 group-hover:rotate-90" />
+                  Remove
+                </button>
+              )}
+            </div>
           </div>
+
+          <h1 className="relative z-10 text-3xl font-bold mb-2 drop-shadow-md text-white transition-all duration-300 hover:scale-105">
+            {user?.name || 'User'}
+          </h1>
+          <p className="relative z-10 opacity-90 text-base mb-3 text-white/90">
+            {user?.email || 'user@example.com'}
+          </p>
+          <span 
+            className="relative z-10 inline-block px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-wide border transition-all duration-300 hover:scale-110 hover:shadow-lg"
+            style={{
+              background: user?.userType === 'admin' 
+                ? 'rgba(255, 255, 255, 0.14)'
+                : 'rgba(255, 255, 255, 0.06)',
+              borderWidth: '1px',
+              borderStyle: 'solid',
+              borderColor: 'rgba(255, 255, 255, 0.12)',
+              boxShadow: '0 4px 16px rgba(37,99,235,0.06)'
+            }}
+          >
+            {user?.userType?.toUpperCase() || 'USER'}
+          </span>
         </div>
 
-        {/* Change Password */}
-        <div className="bg-white border-2 border-[#e2e8f0] rounded-2xl p-8 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
-          <div className="flex items-center gap-3 text-xl font-bold text-[#2563eb] mb-7 pb-4 border-b-2 border-[#e2e8f0]">
-            <Lock size={20} />
-            Change Password
-          </div>
+        {/* Sections */}
+        <div className="flex flex-col gap-6">
+          {/* Account Information */}
+          <div className="bg-white border-2 border-[#e2e8f0] rounded-2xl p-8 shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-1 animate-slideInUp" style={{ animationDelay: '0.1s' }}>
+            <div className="flex items-center gap-3 text-xl font-bold text-[#2563eb] mb-7 pb-4 border-b-2 border-[#e2e8f0] group">
+              <UserIcon size={20} className="transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12" />
+              Account Information
+            </div>
 
-          <div className="mb-6">
-            <label className="block font-semibold text-[#1e293b] mb-2 text-sm uppercase tracking-wide">
-              Current Password
-            </label>
-            <div className="relative flex items-center w-full">
-              <Lock size={18} className="absolute left-3.5 text-[#64748b] pointer-events-none" style={{ paddingTop: '11px' }} />
-              <input
-                className={`w-full py-3.5 px-12 border-2 rounded-lg text-base transition-all duration-300 bg-white ${
-                  passwordErrors.currentPassword 
-                    ? 'border-red-600 shadow-[0_0_0_4px_rgba(220,38,38,0.1)]' 
-                    : 'border-[#e2e8f0] focus:border-[#2563eb] focus:shadow-[0_0_0_8px_rgba(37,99,235,0.06)]'
-                } focus:outline-none`}
-                type={showCurrentPassword ? 'text' : 'password'}
-                value={passwordData.currentPassword}
-                onChange={(e) => { 
-                  setPasswordData({ ...passwordData, currentPassword: e.target.value }); 
-                  setPasswordErrors({ ...passwordErrors, currentPassword: '' }); 
-                }}
-                placeholder="Enter current password"
-              />
+            <div className="mb-6">
+              <label className="block font-semibold text-[#1e293b] mb-2 text-sm uppercase tracking-wide">
+                Full Name
+              </label>
+              <div className="relative flex items-center w-full group">
+                <UserIcon size={20} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b] pointer-events-none transition-all duration-300 group-focus-within:text-[#2563eb] group-focus-within:scale-110" />
+                <input
+                  className={`w-full py-3.5 pl-11 pr-4 border-2 rounded-lg text-base transition-all duration-300 bg-white transform hover:scale-[1.01] focus:scale-[1.02] ${
+                    accountErrors.name 
+                      ? 'border-red-600 shadow-[0_0_0_4px_rgba(220,38,38,0.1)] animate-shake' 
+                      : 'border-[#e2e8f0] focus:border-[#2563eb] focus:shadow-[0_0_0_8px_rgba(37,99,235,0.06)]'
+                  } focus:outline-none`}
+                  type="text"
+                  value={accountData.name}
+                  onChange={(e) => { 
+                    setAccountData({ ...accountData, name: e.target.value }); 
+                    setAccountErrors({ ...accountErrors, name: '' }); 
+                  }}
+                  placeholder="Enter your full name"
+                />
+              </div>
+              {accountErrors.name && (
+                <span className="text-red-600 text-xs mt-1.5 block font-medium animate-slideInDown">
+                  {accountErrors.name}
+                </span>
+              )}
+            </div>
+
+            <div className="mb-6">
+              <label className="block font-semibold text-[#1e293b] mb-2 text-sm uppercase tracking-wide">
+                Email Address
+              </label>
+              <div className="relative flex items-center w-full group">
+                <Mail size={20} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b] pointer-events-none transition-all duration-300 group-focus-within:text-[#2563eb] group-focus-within:scale-110" />
+                <input
+                  className={`w-full py-3.5 pl-11 pr-4 border-2 rounded-lg text-base transition-all duration-300 bg-white transform hover:scale-[1.01] focus:scale-[1.02] ${
+                    accountErrors.email 
+                      ? 'border-red-600 shadow-[0_0_0_4px_rgba(220,38,38,0.1)] animate-shake' 
+                      : 'border-[#e2e8f0] focus:border-[#2563eb] focus:shadow-[0_0_0_8px_rgba(37,99,235,0.06)]'
+                  } focus:outline-none`}
+                  type="email"
+                  value={accountData.email}
+                  onChange={(e) => { 
+                    setAccountData({ ...accountData, email: e.target.value }); 
+                    setAccountErrors({ ...accountErrors, email: '' }); 
+                  }}
+                  placeholder="Enter your email"
+                />
+              </div>
+              {accountErrors.email && (
+                <span className="text-red-600 text-xs mt-1.5 block font-medium animate-slideInDown">
+                  {accountErrors.email}
+                </span>
+              )}
+            </div>
+
+            {accountErrors.submit && (
+              <div className="text-red-600 text-sm mb-3 font-medium bg-red-50 py-3 px-4 rounded-lg border border-red-200 animate-scaleIn">
+                {accountErrors.submit}
+              </div>
+            )}
+            {accountSuccess && (
+              <div className="text-green-600 text-sm mb-3 bg-green-600/10 py-3.5 px-4 rounded-lg border border-green-600/25 font-medium animate-scaleIn flex items-center gap-2">
+                <span className="inline-block w-5 h-5 bg-green-600 rounded-full flex items-center justify-center text-white text-xs animate-checkmark">✓</span>
+                {accountSuccess}
+              </div>
+            )}
+
+            <div className="flex gap-3 justify-end mt-7 pt-6 border-t-2 border-[#e2e8f0]">
               <button 
+                className="px-7 py-3.5 rounded-lg text-base font-semibold transition-all duration-300 bg-slate-200/50 text-slate-600 border-2 border-slate-200/80 hover:bg-slate-200/80 hover:border-[#2563eb] hover:text-[#2563eb] hover:-translate-y-1 hover:scale-105 hover:shadow-md active:translate-y-0 active:scale-95"
                 type="button" 
-                className="absolute right-3.5 bg-transparent border-none text-[#2563eb] cursor-pointer p-1.5 rounded-md transition-all duration-300 flex items-center justify-center w-8 h-8 hover:text-[#2563eb] hover:bg-[#2563eb]/10"
-                style={{ marginTop: '10px' }}
-                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                onClick={() => { 
+                  setAccountData({ name: user?.name || '', email: user?.email || ''}); 
+                  setAccountErrors({}); 
+                }}
               >
-                {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                Cancel
+              </button>
+              <button 
+                className="flex items-center gap-2 px-7 py-3.5 rounded-lg text-base font-semibold text-white transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none hover:-translate-y-1 hover:scale-105 hover:shadow-2xl active:translate-y-0 active:scale-95 group relative overflow-hidden"
+                style={{
+                  background: 'linear-gradient(135deg,#2563eb,#8b5cf6)',
+                  boxShadow: '0 6px 18px rgba(37,99,235,0.16)'
+                }}
+                type="button" 
+                disabled={isLoading} 
+                onClick={handleAccountUpdate}
+              >
+                <Save size={16} className="transition-transform duration-300 group-hover:rotate-12 relative z-10" />
+                <span className="relative z-10">{isLoading ? 'Saving...' : 'Save Changes'}</span>
+                <span className="absolute inset-0 bg-white/20 rounded-lg transition-transform duration-300 scale-0 group-hover:scale-100" />
               </button>
             </div>
-            {passwordErrors.currentPassword && (
-              <span className="text-red-600 text-xs mt-1.5 block font-medium">
-                {passwordErrors.currentPassword}
-              </span>
-            )}
           </div>
 
-          <div className="mb-6">
-            <label className="block font-semibold text-[#1e293b] mb-2 text-sm uppercase tracking-wide">
-              New Password
-            </label>
-            <div className="relative flex items-center w-full">
-              <Lock size={18} className="absolute left-3.5 text-[#64748b] pointer-events-none" style={{ paddingTop: '11px' }} />
-              <input
-                className={`w-full py-3.5 px-12 border-2 rounded-lg text-base transition-all duration-300 bg-white ${
-                  passwordErrors.newPassword 
-                    ? 'border-red-600 shadow-[0_0_0_4px_rgba(220,38,38,0.1)]' 
-                    : 'border-[#e2e8f0] focus:border-[#2563eb] focus:shadow-[0_0_0_8px_rgba(37,99,235,0.06)]'
-                } focus:outline-none`}
-                type={showNewPassword ? 'text' : 'password'}
-                value={passwordData.newPassword}
-                onChange={(e) => { 
-                  setPasswordData({ ...passwordData, newPassword: e.target.value }); 
-                  setPasswordErrors({ ...passwordErrors, newPassword: '' }); 
-                }}
-                placeholder="Enter new password"
-              />
-              <button 
-                type="button" 
-                className="absolute right-3.5 bg-transparent border-none text-[#2563eb] cursor-pointer p-1.5 rounded-md transition-all duration-300 flex items-center justify-center w-8 h-8 hover:text-[#2563eb] hover:bg-[#2563eb]/10"
-                style={{ marginTop: '10px' }}
-                onClick={() => setShowNewPassword(!showNewPassword)}
-              >
-                {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
+          {/* Change Password */}
+          <div className="bg-white border-2 border-[#e2e8f0] rounded-2xl p-8 shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-1 animate-slideInUp" style={{ animationDelay: '0.2s' }}>
+            <div className="flex items-center gap-3 text-xl font-bold text-[#2563eb] mb-7 pb-4 border-b-2 border-[#e2e8f0] group">
+              <Lock size={20} className="transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12" />
+              Change Password
             </div>
-            {passwordErrors.newPassword && (
-              <span className="text-red-600 text-xs mt-1.5 block font-medium">
-                {passwordErrors.newPassword}
-              </span>
-            )}
 
-            <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg p-4 mt-3 text-xs text-[#64748b]">
-              <strong className="text-[#2563eb] block mb-2.5 text-sm">
-                Password Requirements:
-              </strong>
-              <ul className="m-0 pl-5">
-                <li className={`my-1.5 leading-relaxed transition-all duration-300 ${
-                  checkPasswordRequirements(passwordData.newPassword).length 
-                    ? 'text-green-600 font-semibold bg-green-600/8 py-1 px-1.5 rounded-md -ml-1.5 pl-1.5' 
-                    : ''
-                }`}>
-                  {checkPasswordRequirements(passwordData.newPassword).length && '✓ '}
-                  At least 6 characters long
-                </li>
-                <li className={`my-1.5 leading-relaxed transition-all duration-300 ${
-                  checkPasswordRequirements(passwordData.newPassword).uppercase 
-                    ? 'text-green-600 font-semibold bg-green-600/8 py-1 px-1.5 rounded-md -ml-1.5 pl-1.5' 
-                    : ''
-                }`}>
-                  {checkPasswordRequirements(passwordData.newPassword).uppercase && '✓ '}
-                  Contains at least one uppercase letter
-                </li>
-                <li className={`my-1.5 leading-relaxed transition-all duration-300 ${
-                  checkPasswordRequirements(passwordData.newPassword).lowercase 
-                    ? 'text-green-600 font-semibold bg-green-600/8 py-1 px-1.5 rounded-md -ml-1.5 pl-1.5' 
-                    : ''
-                }`}>
-                  {checkPasswordRequirements(passwordData.newPassword).lowercase && '✓ '}
-                  Contains at least one lowercase letter
-                </li>
-                <li className={`my-1.5 leading-relaxed transition-all duration-300 ${
-                  checkPasswordRequirements(passwordData.newPassword).number 
-                    ? 'text-green-600 font-semibold bg-green-600/8 py-1 px-1.5 rounded-md -ml-1.5 pl-1.5' 
-                    : ''
-                }`}>
-                  {checkPasswordRequirements(passwordData.newPassword).number && '✓ '}
-                  Contains at least one number
-                </li>
-              </ul>
+            <div className="mb-6">
+              <label className="block font-semibold text-[#1e293b] mb-2 text-sm uppercase tracking-wide">
+                Current Password
+              </label>
+              <div className="relative flex items-center w-full group">
+                <Lock size={20} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b] pointer-events-none transition-all duration-300 group-focus-within:text-[#2563eb] group-focus-within:scale-110" />
+                <input
+                  className={`w-full py-3.5 pl-11 pr-12 border-2 rounded-lg text-base transition-all duration-300 bg-white transform hover:scale-[1.01] focus:scale-[1.02] ${
+                    passwordErrors.currentPassword 
+                      ? 'border-red-600 shadow-[0_0_0_4px_rgba(220,38,38,0.1)] animate-shake' 
+                      : 'border-[#e2e8f0] focus:border-[#2563eb] focus:shadow-[0_0_0_8px_rgba(37,99,235,0.06)]'
+                  } focus:outline-none`}
+                  type={showCurrentPassword ? 'text' : 'password'}
+                  value={passwordData.currentPassword}
+                  onChange={(e) => { 
+                    setPasswordData({ ...passwordData, currentPassword: e.target.value }); 
+                    setPasswordErrors({ ...passwordErrors, currentPassword: '' }); 
+                  }}
+                  placeholder="Enter current password"
+                />
+                <button 
+                  type="button" 
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 bg-transparent border-none text-[#2563eb] cursor-pointer p-1.5 rounded-md transition-all duration-300 flex items-center justify-center w-8 h-8 hover:text-[#2563eb] hover:bg-[#2563eb]/10 hover:scale-110 active:scale-95"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                >
+                  {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              {passwordErrors.currentPassword && (
+                <span className="text-red-600 text-xs mt-1.5 block font-medium animate-slideInDown">
+                  {passwordErrors.currentPassword}
+                </span>
+              )}
             </div>
-          </div>
+
+            <div className="mb-6">
+              <label className="block font-semibold text-[#1e293b] mb-2 text-sm uppercase tracking-wide">
+                New Password
+              </label>
+              <div className="relative flex items-center w-full group">
+                <Lock size={20} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b] pointer-events-none transition-all duration-300 group-focus-within:text-[#2563eb] group-focus-within:scale-110" />
+                <input
+                  className={`w-full py-3.5 pl-11 pr-12 border-2 rounded-lg text-base transition-all duration-300 bg-white transform hover:scale-[1.01] focus:scale-[1.02] ${
+                    passwordErrors.newPassword 
+                      ? 'border-red-600 shadow-[0_0_0_4px_rgba(220,38,38,0.1)] animate-shake' 
+                      : 'border-[#e2e8f0] focus:border-[#2563eb] focus:shadow-[0_0_0_8px_rgba(37,99,235,0.06)]'
+                  } focus:outline-none`}
+                  type={showNewPassword ? 'text' : 'password'}
+                  value={passwordData.newPassword}
+                  onChange={(e) => { 
+                    setPasswordData({ ...passwordData, newPassword: e.target.value }); 
+                    setPasswordErrors({ ...passwordErrors, newPassword: '' }); 
+                  }}
+                  placeholder="Enter new password"
+                />
+                <button 
+                  type="button" 
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 bg-transparent border-none text-[#2563eb] cursor-pointer p-1.5 rounded-md transition-all duration-300 flex items-center justify-center w-8 h-8 hover:text-[#2563eb] hover:bg-[#2563eb]/10 hover:scale-110 active:scale-95"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                >
+                  {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              {passwordErrors.newPassword && (
+                <span className="text-red-600 text-xs mt-1.5 block font-medium animate-slideInDown">
+                  {passwordErrors.newPassword}
+                </span>
+              )}
+
+              <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg p-4 mt-3 text-xs text-[#64748b] transition-all duration-300 hover:shadow-md">
+                <strong className="text-[#2563eb] block mb-2.5 text-sm">
+                  Password Requirements:
+                </strong>
+                <ul className="m-0 pl-5">
+                  <li className={`my-1.5 leading-relaxed transition-all duration-300 ${
+                    checkPasswordRequirements(passwordData.newPassword).length 
+                      ? 'text-green-600 font-semibold bg-green-600/8 py-1 px-1.5 rounded-md -ml-1.5 pl-1.5 animate-checkmark' 
+                      : ''
+                  }`}>
+                    {checkPasswordRequirements(passwordData.newPassword).length && '✓ '}
+                    At least 6 characters long
+                  </li>
+                  <li className={`my-1.5 leading-relaxed transition-all duration-300 ${
+                    checkPasswordRequirements(passwordData.newPassword).uppercase 
+                      ? 'text-green-600 font-semibold bg-green-600/8 py-1 px-1.5 rounded-md -ml-1.5 pl-1.5 animate-checkmark' 
+                      : ''
+                  }`}>
+                    {checkPasswordRequirements(passwordData.newPassword).uppercase && '✓ '}
+                    Contains at least one uppercase letter
+                  </li>
+                  <li className={`my-1.5 leading-relaxed transition-all duration-300 ${
+                    checkPasswordRequirements(passwordData.newPassword).lowercase 
+                      ? 'text-green-600 font-semibold bg-green-600/8 py-1 px-1.5 rounded-md -ml-1.5 pl-1.5 animate-checkmark' 
+                      : ''
+                  }`}>
+                    {checkPasswordRequirements(passwordData.newPassword).lowercase && '✓ '}
+                    Contains at least one lowercase letter
+                  </li>
+                  <li className={`my-1.5 leading-relaxed transition-all duration-300 ${
+                    checkPasswordRequirements(passwordData.newPassword).number 
+                      ? 'text-green-600 font-semibold bg-green-600/8 py-1 px-1.5 rounded-md -ml-1.5 pl-1.5 animate-checkmark' 
+                      : ''
+                  }`}>
+                    {checkPasswordRequirements(passwordData.newPassword).number && '✓ '}
+                    Contains at least one number
+                  </li>
+                </ul>
+              </div>
+            </div>
 
             <div className="mb-6">
             <label className="block font-semibold text-[#1e293b] mb-2 text-sm uppercase tracking-wide">
               Confirm New Password
             </label>
-            <div className="relative flex items-center w-full">
-              <Lock size={18} className="absolute left-3.5 text-[#64748b] pointer-events-none" style={{ paddingTop: '11px' }} />
+            <div className="relative flex items-center w-full group">
+              <Lock size={20} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b] pointer-events-none transition-all duration-300 group-focus-within:text-[#2563eb] group-focus-within:scale-110" />
               <input
-                className={`w-full py-3.5 px-12 border-2 rounded-lg text-base transition-all duration-300 bg-white ${
+                className={`w-full py-3.5 pl-11 pr-12 border-2 rounded-lg text-base transition-all duration-300 bg-white transform hover:scale-[1.01] focus:scale-[1.02] ${
                   passwordErrors.confirmPassword 
-                    ? 'border-red-600 shadow-[0_0_0_4px_rgba(220,38,38,0.1)]' 
+                    ? 'border-red-600 shadow-[0_0_0_4px_rgba(220,38,38,0.1)] animate-shake' 
                     : 'border-[#e2e8f0] focus:border-[#2563eb] focus:shadow-[0_0_0_8px_rgba(37,99,235,0.06)]'
                 } focus:outline-none`}
                 type={showConfirmPassword ? 'text' : 'password'}
@@ -600,59 +702,61 @@ export default function UserProfile({ user, onUserChange }) {
               />
               <button 
                 type="button" 
-                className="absolute right-3.5 bg-transparent border-none text-[#2563eb] cursor-pointer p-1.5 rounded-md transition-all duration-300 flex items-center justify-center w-8 h-8 hover:text-[#2563eb] hover:bg-[#2563eb]/10"
-                style={{ marginTop: '10px' }}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 bg-transparent border-none text-[#2563eb] cursor-pointer p-1.5 rounded-md transition-all duration-300 flex items-center justify-center w-8 h-8 hover:text-[#2563eb] hover:bg-[#2563eb]/10 hover:scale-110 active:scale-95"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               >
-                {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
             {passwordErrors.confirmPassword && (
-              <span className="text-red-600 text-xs mt-1.5 block font-medium">
+              <span className="text-red-600 text-xs mt-1.5 block font-medium animate-slideInDown">
                 {passwordErrors.confirmPassword}
               </span>
             )}
           </div>
 
-          {passwordErrors.submit && (
-            <div className="text-red-600 text-sm mb-3 font-medium">
-              {passwordErrors.submit}
-            </div>
-          )}
-          {passwordSuccess && (
-            <div className="text-green-600 text-sm mb-3 bg-green-600/10 py-3.5 px-4 rounded-lg border border-green-600/25 font-medium">
-              {passwordSuccess}
-            </div>
-          )}
+            {passwordErrors.submit && (
+              <div className="text-red-600 text-sm mb-3 font-medium bg-red-50 py-3 px-4 rounded-lg border border-red-200 animate-scaleIn">
+                {passwordErrors.submit}
+              </div>
+            )}
+            {passwordSuccess && (
+              <div className="text-green-600 text-sm mb-3 bg-green-600/10 py-3.5 px-4 rounded-lg border border-green-600/25 font-medium animate-scaleIn flex items-center gap-2">
+                <span className="inline-block w-5 h-5 bg-green-600 rounded-full flex items-center justify-center text-white text-xs animate-checkmark">✓</span>
+                {passwordSuccess}
+              </div>
+            )}
 
-          <div className="flex gap-3 justify-end mt-7 pt-6 border-t-2 border-[#e2e8f0]">
-            <button 
-              type="button" 
-              className="px-7 py-3.5 rounded-lg text-base font-semibold transition-all duration-300 bg-slate-200/50 text-slate-600 border-2 border-slate-200/80 hover:bg-slate-200/80 hover:border-[#2563eb] hover:text-[#2563eb] hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0"
-              onClick={() => setPasswordData({ 
-                currentPassword: '', 
-                newPassword: '', 
-                confirmPassword: '' 
-              })}
-            >
-              Cancel
-            </button>
-            <button 
-              type="button" 
-              className="flex items-center gap-2 px-7 py-3.5 rounded-lg text-base font-semibold text-white transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none hover:-translate-y-0.5 active:translate-y-0"
-              style={{
-                background: 'linear-gradient(135deg,#2563eb,#8b5cf6)',
-                boxShadow: '0 6px 18px rgba(37,99,235,0.16)'
-              }}
-              disabled={isLoading} 
-              onClick={handlePasswordUpdate}
-            >
-              <Save size={16} />
-              {isLoading ? 'Updating...' : 'Update Password'}
-            </button>
+            <div className="flex gap-3 justify-end mt-7 pt-6 border-t-2 border-[#e2e8f0]">
+              <button 
+                type="button" 
+                className="px-7 py-3.5 rounded-lg text-base font-semibold transition-all duration-300 bg-slate-200/50 text-slate-600 border-2 border-slate-200/80 hover:bg-slate-200/80 hover:border-[#2563eb] hover:text-[#2563eb] hover:-translate-y-1 hover:scale-105 hover:shadow-md active:translate-y-0 active:scale-95"
+                onClick={() => setPasswordData({ 
+                  currentPassword: '', 
+                  newPassword: '', 
+                  confirmPassword: '' 
+                })}
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                className="flex items-center gap-2 px-7 py-3.5 rounded-lg text-base font-semibold text-white transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none hover:-translate-y-1 hover:scale-105 hover:shadow-2xl active:translate-y-0 active:scale-95 group relative overflow-hidden"
+                style={{
+                  background: 'linear-gradient(135deg,#2563eb,#8b5cf6)',
+                  boxShadow: '0 6px 18px rgba(37,99,235,0.16)'
+                }}
+                disabled={isLoading} 
+                onClick={handlePasswordUpdate}
+              >
+                <Save size={16} className="transition-transform duration-300 group-hover:rotate-12 relative z-10" />
+                <span className="relative z-10">{isLoading ? 'Updating...' : 'Update Password'}</span>
+                <span className="absolute inset-0 bg-white/20 rounded-lg transition-transform duration-300 scale-0 group-hover:scale-100" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
