@@ -3,6 +3,7 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './AuthContext';
+import { SocketProvider } from './SocketContext';
 import LoginPage from './Page/Login.jsx';
 import MainPage from './Page/MainPage.jsx';
 import { ProtectedRoute } from './Components/ProtectedRoute.jsx';
@@ -96,11 +97,13 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <div className="App">
-          <AppContent />
-        </div>
-      </Router>
+      <SocketProvider>
+        <Router>
+          <div className="App">
+            <AppContent />
+          </div>
+        </Router>
+      </SocketProvider>
     </AuthProvider>
   );
 }

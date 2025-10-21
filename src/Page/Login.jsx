@@ -81,8 +81,7 @@ export default function TaskManagerLogin() {
     <div className="min-h-screen flex">
       {/* Left Panel - Brand & Features */}
       <div
-        className="w-full lg:w-1/2 p-8 flex flex-col justify-between relative overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, #2563eb 0%, #8b5cf6 100%)' }}
+        className="w-full lg:w-1/2 p-8 flex flex-col justify-between relative overflow-hidden bg-gradient-to-r from-blue-500 to-indigo-600"
       >
 
         {/* Top-right Home button */}

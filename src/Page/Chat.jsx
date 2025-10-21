@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, User, Search, X, Plus, UserPlus, Clock, Edit2, Trash2, MessageSquare } from 'lucide-react';
+import { Send, User, Search, X, Plus, UserPlus, Clock, Edit2, Trash2, MessageSquare, MessageCircle, Shield, ShieldOff } from 'lucide-react';
 import { useAuth } from '../AuthContext';
+import { useSocket } from '../SocketContext';
 
 export default function Chat({ user }) {
-  const { apiRequest } = useAuth();
+  const { apiRequest, isAdmin } = useAuth();
+  const { socket, isConnected, onlineUsers } = useSocket();
   const [allUsers, setAllUsers] = useState([]);
   const [contacts, setContacts] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -15,188 +17,442 @@ export default function Chat({ user }) {
   const [emailSearchResults, setEmailSearchResults] = useState([]);
   const [lastMessages, setLastMessages] = useState({});
   const [unreadCounts, setUnreadCounts] = useState({});
-  const [messageRequests, setMessageRequests] = useState([]);
+  const [contactRequests, setContactRequests] = useState([]);
+  const [waitingMessages, setWaitingMessages] = useState([]);
+  const [sentRequests, setSentRequests] = useState([]);
+  const [blockedUsers, setBlockedUsers] = useState([]);
+  const [blockedByOthers, setBlockedByOthers] = useState([]);
+  const [showWarningModal, setShowWarningModal] = useState(false);
+  const [pendingMessageUser, setPendingMessageUser] = useState(null);
   const [activeTab, setActiveTab] = useState('contacts');
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editingText, setEditingText] = useState('');
   const messagesEndRef = useRef(null);
 
+  // Initial load - fetch all data from database ONCE
   useEffect(() => {
-    fetchAllUsers();
-    loadContactsFromStorage();
-  }, []);
+    if (!socket || !isConnected) return;
 
+    fetchAllUsers();
+    fetchContacts();
+    fetchSentRequests();
+    fetchContactRequests();
+    fetchBlockedUsers();
+    fetchBlockedByOthers();
+  }, [socket, isConnected]);
+
+  // Fetch related data when contacts change
   useEffect(() => {
-    fetchLastMessagesForContacts();
-    fetchMessageRequests();
+    if (contacts.length > 0) {
+      fetchLastMessagesForContacts();
+    }
   }, [contacts]);
 
+  // Fetch messages when user is selected
   useEffect(() => {
     if (selectedUser) {
       fetchMessages();
-      const interval = setInterval(fetchMessages, 3000);
-      return () => clearInterval(interval);
     }
   }, [selectedUser]);
+
+  // Socket.IO event listeners for real-time updates
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+
+    // Listen for new messages
+    socket.on('new_message', (messageData) => {
+      console.log('📨 New message received:', messageData);
+      
+      if (selectedUser && selectedUser.id === messageData.sender_id) {
+        setMessages(prev => [...prev, messageData]);
+        socket.emit('mark_read', { senderId: messageData.sender_id });
+        setTimeout(scrollToBottom, 100);
+      }
+      
+      fetchLastMessagesForContacts();
+      fetchWaitingMessages();
+    });
+
+    // Listen for message sent confirmation
+    socket.on('message_sent', (messageData) => {
+      console.log('✅ Message sent confirmed:', messageData);
+      
+      if (selectedUser && selectedUser.id === messageData.receiver_id) {
+        setMessages(prev => {
+          if (prev.some(msg => msg.id === messageData.id)) {
+            return prev;
+          }
+          return [...prev, messageData];
+        });
+        setTimeout(scrollToBottom, 100);
+      }
+      
+      fetchLastMessagesForContacts();
+    });
+
+    // Listen for message edits
+    socket.on('message_edited', (data) => {
+      console.log('✏️ Message edited:', data);
+      
+      setMessages(prev => prev.map(msg => 
+        msg.id === data.messageId 
+          ? { ...msg, message: data.message, edited: data.edited }
+          : msg
+      ));
+      
+      fetchLastMessagesForContacts();
+    });
+
+    // Listen for message deletes
+    socket.on('message_deleted', (data) => {
+      console.log('🗑️ Message deleted:', data);
+      
+      setMessages(prev => prev.map(msg => 
+        msg.id === data.messageId 
+          ? { ...msg, deleted: 1 }
+          : msg
+      ));
+      
+      fetchLastMessagesForContacts();
+    });
+
+    // Listen for new contact requests
+    socket.on('new_contact_request', (data) => {
+      console.log('📬 New contact request:', data);
+      fetchContactRequests();
+    });
+
+    // Listen for contact request approved
+    socket.on('contact_request_approved', (data) => {
+      console.log('✅ Contact request approved:', data);
+      fetchContacts();
+      fetchSentRequests();
+      fetchContactRequests();
+      fetchWaitingMessages();
+    });
+
+    // Listen for message notifications
+    socket.on('message_notification', (data) => {
+      console.log('🔔 Message notification:', data);
+      fetchLastMessagesForContacts();
+      fetchWaitingMessages();
+    });
+
+    // Listen for contact request declined confirmation
+    socket.on('contact_request_declined_confirmed', (data) => {
+      console.log('📪 Contact request declined:', data);
+      fetchSentRequests();
+    });
+
+    // Listen for waiting message removed confirmation
+    socket.on('waiting_message_removed', (data) => {
+      console.log('🗑️ Waiting message removed:', data);
+    });
+
+    // Listen for user blocked
+    socket.on('user_blocked', (data) => {
+      console.log('🚫 User blocked:', data);
+      fetchBlockedUsers();
+      fetchWaitingMessages();
+      if (selectedUser && selectedUser.id === data.blockedUser.id) {
+        setSelectedUser(null);
+      }
+    });
+
+    // Listen for user unblocked
+    socket.on('user_unblocked', (data) => {
+      console.log('✅ User unblocked:', data);
+      fetchBlockedUsers();
+    });
+
+    // Listen for being blocked by someone
+    socket.on('you_were_blocked', (data) => {
+      console.log('🚫 You were blocked by:', data.blockedBy);
+      fetchBlockedByOthers();
+      if (showAddUser && emailSearch) {
+        searchUserByEmail();
+      }
+    });
+
+    // Listen for contact removed
+    socket.on('contact_removed', (data) => {
+      console.log('👋 Contact removed:', data);
+      fetchContacts();
+      fetchSentRequests();
+      if (selectedUser && selectedUser.id === data.removedBy) {
+        setSelectedUser(null);
+      }
+    });
+
+    // Typing indicators
+    socket.on('user_typing', (data) => {
+      if (selectedUser && selectedUser.id === data.userId) {
+        console.log(`${data.userId} is typing...`);
+      }
+    });
+
+    socket.on('user_stopped_typing', (data) => {
+      if (selectedUser && selectedUser.id === data.userId) {
+        console.log(`${data.userId} stopped typing`);
+      }
+    });
+
+    // Cleanup listeners
+    return () => {
+      socket.off('new_message');
+      socket.off('message_sent');
+      socket.off('message_edited');
+      socket.off('message_deleted');
+      socket.off('new_contact_request');
+      socket.off('contact_request_approved');
+      socket.off('message_notification');
+      socket.off('user_typing');
+      socket.off('user_stopped_typing');
+      socket.off('contact_request_declined_confirmed');
+      socket.off('user_blocked');
+      socket.off('user_unblocked');
+      socket.off('you_were_blocked');
+      socket.off('contact_removed');
+      socket.off('waiting_message_removed');
+    };
+  }, [socket, isConnected, selectedUser, showAddUser, emailSearch]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const loadContactsFromStorage = () => {
-    const savedContacts = localStorage.getItem(`contacts_${user.id}`);
-    if (savedContacts) {
-      const contactIds = JSON.parse(savedContacts);
-      setContacts(contactIds);
+  // Fetch contacts from Socket.IO
+  const fetchContacts = () => {
+    if (!socket || !isConnected) return;
+    socket.emit('get_contacts');
+  };
+
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+    const handleContacts = (data) => {
+      console.log('📥 Received contacts:', data);
+      if (data && Array.isArray(data.contacts)) {
+        setContacts(data.contacts);
+      } else {
+        setContacts([]);
+      }
+    };
+    socket.on('contacts', handleContacts);
+    return () => {
+      socket.off('contacts', handleContacts);
+    };
+  }, [socket, isConnected]);
+
+  // Fetch sent contact requests from Socket.IO
+  const fetchSentRequests = () => {
+    if (!socket || !isConnected) return;
+    socket.emit('get_sent_requests');
+  };
+
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+    const handleSentRequests = (data) => {
+      console.log('📥 Received sent requests:', data);
+      if (data && Array.isArray(data.sentRequests)) {
+        const sentRequestIds = data.sentRequests
+          .filter(req => req.status === 'pending')
+          .map(req => req.receiver_id);
+        setSentRequests(sentRequestIds);
+      } else {
+        setSentRequests([]);
+      }
+    };
+    socket.on('sent_requests', handleSentRequests);
+    return () => {
+      socket.off('sent_requests', handleSentRequests);
+    };
+  }, [socket, isConnected]);
+
+  // Fetch blocked users from Socket.IO with fallback
+  const fetchBlockedUsers = async () => {
+    if (socket && isConnected) {
+      socket.emit('get_blocked_users');
+    } else {
+      try {
+        const response = await apiRequest('http://localhost:3001/blocked-users');
+        if (response.ok) {
+          const data = await response.json();
+          setBlockedUsers(data);
+        } else {
+          setBlockedUsers([]);
+        }
+      } catch (error) {
+        console.error('Error fetching blocked users (REST API):', error);
+        setBlockedUsers([]);
+      }
     }
   };
 
-  const saveContactsToStorage = (contactIds) => {
-    localStorage.setItem(`contacts_${user.id}`, JSON.stringify(contactIds));
-  };
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+    const handleBlockedUsers = (data) => {
+      console.log('📥 Received blocked users:', data);
+      if (data && Array.isArray(data.blockedUsers)) {
+        setBlockedUsers(data.blockedUsers);
+        console.log('✅ Blocked users state updated:', data.blockedUsers);
+      } else {
+        setBlockedUsers([]);
+        console.log('⚠️ No blocked users or invalid data');
+      }
+    };
+    socket.on('blocked_users', handleBlockedUsers);
+    return () => {
+      socket.off('blocked_users', handleBlockedUsers);
+    };
+  }, [socket, isConnected]);
 
-  const fetchAllUsers = async () => {
+  // Fetch users who blocked me
+  const fetchBlockedByOthers = async () => {
     try {
-      const response = await apiRequest('http://localhost:3001/users/search');
+      const response = await apiRequest('http://localhost:3001/blocked-by-others');
       if (response.ok) {
         const data = await response.json();
-        setAllUsers(data);
+        setBlockedByOthers(data.map(u => u.id));
+        console.log('📥 Users who blocked me:', data.map(u => u.id));
+      } else {
+        setBlockedByOthers([]);
       }
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('Error fetching blocked-by-others:', error);
+      setBlockedByOthers([]);
     }
   };
 
-  const fetchMessageRequests = async () => {
-    try {
-      const response = await apiRequest('http://localhost:3001/messages');
-      if (response.ok) {
-        const allMessages = await response.json();
-        
-        const requestsMap = new Map();
-        
-        allMessages.forEach(msg => {
-          if (msg.receiver_id === user.id && !contacts.includes(msg.sender_id)) {
-            if (!requestsMap.has(msg.sender_id)) {
-              requestsMap.set(msg.sender_id, {
-                userId: msg.sender_id,
-                userName: msg.sender_name,
-                userImage: msg.sender_image,
-                lastMessage: msg.message,
-                timestamp: msg.timestamp,
-                unreadCount: msg.read === 0 ? 1 : 0
-              });
-            } else {
-              const existing = requestsMap.get(msg.sender_id);
-              if (new Date(msg.timestamp) > new Date(existing.timestamp)) {
-                existing.lastMessage = msg.message;
-                existing.timestamp = msg.timestamp;
-              }
-              if (msg.read === 0) {
-                existing.unreadCount++;
-              }
-            }
-          }
-        });
-        
-        setMessageRequests(Array.from(requestsMap.values()));
-      }
-    } catch (error) {
-      console.error('Error fetching message requests:', error);
-    }
+  // Fetch all users from Socket.IO
+  const fetchAllUsers = () => {
+    if (!socket || !isConnected) return;
+    socket.emit('get_all_users');
   };
 
-  const fetchLastMessagesForContacts = async () => {
-    try {
-      const response = await apiRequest('http://localhost:3001/messages');
-      if (response.ok) {
-        const allMessages = await response.json();
-        
-        const lastMsgMap = {};
-        const unreadMap = {};
-        
-        contacts.forEach(contactId => {
-          const conversationMsgs = allMessages.filter(
-            msg => 
-              (msg.sender_id === contactId && msg.receiver_id === user.id) ||
-              (msg.sender_id === user.id && msg.receiver_id === contactId)
-          );
-          
-          if (conversationMsgs.length > 0) {
-            const sorted = conversationMsgs.sort((a, b) => 
-              new Date(b.timestamp) - new Date(a.timestamp)
-            );
-            lastMsgMap[contactId] = sorted[0];
-            
-            const unread = conversationMsgs.filter(
-              msg => msg.receiver_id === user.id && msg.read === 0
-            ).length;
-            unreadMap[contactId] = unread;
-          }
-        });
-        
-        setLastMessages(lastMsgMap);
-        setUnreadCounts(unreadMap);
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+    const handleAllUsers = (data) => {
+      console.log('📥 Received all users:', data);
+      if (data && Array.isArray(data.users)) {
+        setAllUsers(data.users);
+        if (data.users.length > 0) {
+          fetchWaitingMessages();
+        }
+      } else {
+        setAllUsers([]);
+        fetchWaitingMessages();
       }
-    } catch (error) {
-      console.error('Error fetching last messages:', error);
-    }
+    };
+    socket.on('all_users', handleAllUsers);
+    return () => {
+      socket.off('all_users', handleAllUsers);
+    };
+  }, [socket, isConnected]);
+
+  // Fetch contact requests from Socket.IO
+  const fetchContactRequests = () => {
+    if (!socket || !isConnected) return;
+    socket.emit('get_contact_requests');
   };
 
-  const fetchMessages = async () => {
-    if (!selectedUser) return;
-    
-    try {
-      const response = await apiRequest(
-        `http://localhost:3001/messages/conversation/${selectedUser.id}`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setMessages(data);
-        
-        data.forEach(msg => {
-          if (msg.receiver_id === user.id && msg.read === 0) {
-            apiRequest(`http://localhost:3001/messages/${msg.id}/read`, {
-              method: 'PUT'
-            });
-          }
-        });
-        
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+    const handleContactRequests = (data) => {
+      console.log('📥 Received contact requests:', data);
+      if (data && Array.isArray(data.contactRequests)) {
+        setContactRequests(data.contactRequests);
+      } else {
+        setContactRequests([]);
+      }
+    };
+    socket.on('contact_requests', handleContactRequests);
+    return () => {
+      socket.off('contact_requests', handleContactRequests);
+    };
+  }, [socket, isConnected]);
+
+  // Fetch waiting messages from Socket.IO
+  const fetchWaitingMessages = () => {
+    if (!socket || !isConnected) return;
+    socket.emit('get_waiting_messages');
+  };
+
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+    const handleWaitingMessages = (data) => {
+      console.log('📥 Received waiting messages:', data);
+      if (data && Array.isArray(data.waitingMessages)) {
+        setWaitingMessages(data.waitingMessages);
+      } else {
+        setWaitingMessages([]);
+      }
+    };
+    socket.on('waiting_messages', handleWaitingMessages);
+    return () => {
+      socket.off('waiting_messages', handleWaitingMessages);
+    };
+  }, [socket, isConnected]);
+
+  // Fetch last messages for contacts from Socket.IO
+  const fetchLastMessagesForContacts = () => {
+    if (!socket || !isConnected || !contacts.length) return;
+    const contactIds = contacts.map(c => c.id);
+    socket.emit('get_last_messages', contactIds);
+  };
+
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+    const handleLastMessages = (data) => {
+      console.log('📥 Received last messages:', data);
+      if (data && data.lastMessages && data.unreadCounts) {
+        setLastMessages(data.lastMessages);
+        setUnreadCounts(data.unreadCounts);
+      } else {
+        setLastMessages({});
+        setUnreadCounts({});
+      }
+    };
+    socket.on('last_messages', handleLastMessages);
+    return () => {
+      socket.off('last_messages', handleLastMessages);
+    };
+  }, [socket, isConnected]);
+
+  // Fetch messages from Socket.IO
+  const fetchMessages = () => {
+    if (!selectedUser || !socket || !isConnected) return;
+    socket.emit('get_messages', selectedUser.id);
+  };
+
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+    const handleMessages = (data) => {
+      console.log('📥 Received messages:', data);
+      if (data && Array.isArray(data.messages)) {
+        setMessages(data.messages);
+        setTimeout(scrollToBottom, 100);
         fetchLastMessagesForContacts();
-        fetchMessageRequests();
+      } else {
+        setMessages([]);
       }
-    } catch (error) {
-      console.error('Error fetching messages:', error);
-    }
-  };
+    };
+    socket.on('messages', handleMessages);
+    return () => {
+      socket.off('messages', handleMessages);
+    };
+  }, [socket, isConnected]);
 
   const sendMessage = (e) => {
     if (e && typeof e.preventDefault === 'function') e.preventDefault();
-    if (!newMessage.trim() || !selectedUser || selectedUser.isRequest) return;
+    if (!newMessage.trim() || !selectedUser || selectedUser.isRequest || !socket || !isConnected) return;
 
-    apiRequest('http://localhost:3001/messages', {
-      method: 'POST',
-      body: JSON.stringify({
-        receiver_id: selectedUser.id,
-        message: newMessage
-      })
-    }).then(response => {
-      if (response && response.ok) {
-        return response.json();
-      }
-    }).then(sentMessage => {
-      if (sentMessage) {
-        setMessages(prev => ([...prev, {
-          ...sentMessage,
-          sender_name: user.name,
-          receiver_name: selectedUser.name
-        }]));
-        setNewMessage('');
-        fetchLastMessagesForContacts();
-      }
-    }).catch(error => {
-      console.error('Error sending message:', error);
+    socket.emit('mark_read', { senderId: selectedUser.id });
+    socket.emit('send_message', {
+      receiver_id: selectedUser.id,
+      message: newMessage
     });
+
+    setNewMessage('');
   };
 
   const viewMessageRequest = (userId) => {
@@ -206,66 +462,182 @@ export default function Chat({ user }) {
     }
   };
 
-  const acceptMessageRequest = (userId) => {
-    if (!contacts.includes(userId)) {
-      const newContacts = [...contacts, userId];
-      setContacts(newContacts);
-      saveContactsToStorage(newContacts);
-      
-      setMessageRequests(messageRequests.filter(req => req.userId !== userId));
-      setActiveTab('contacts');
-      
-      const requestedUser = allUsers.find(u => u.id === userId);
-      if (requestedUser) {
-        setSelectedUser(requestedUser);
+  const acceptContactRequest = async (requestId, senderId) => {
+    try {
+      const response = await apiRequest(`http://localhost:3001/contact-requests/${requestId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'accepted' })
+      });
+
+      if (response.ok) {
+        await fetchContactRequests();
+        await new Promise(resolve => setTimeout(resolve, 100));
+        await fetchContacts();
+        await fetchSentRequests();
+        await fetchWaitingMessages();
+        
+        if (socket && isConnected) {
+          socket.emit('contact_request_accepted', { senderId });
+        }
+        
+        setActiveTab('contacts');
+        const requestedUser = allUsers.find(u => u.id === senderId);
+        if (requestedUser) {
+          setSelectedUser(requestedUser);
+        }
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to accept contact request');
       }
+    } catch (error) {
+      console.error('Error accepting contact request:', error);
+      alert('Failed to accept contact request');
     }
   };
 
-  const deleteMessageRequest = async (userId) => {
-    if (window.confirm('Delete all messages from this user?')) {
-      try {
-        const response = await apiRequest('http://localhost:3001/messages');
+  const sendContactRequest = async (userId) => {
+    try {
+      if (!contacts.some(c => c.id === userId)) {
+        const response = await apiRequest('http://localhost:3001/contact-requests', {
+          method: 'POST',
+          body: JSON.stringify({ receiver_id: userId })
+        });
+
         if (response.ok) {
-          const allMessages = await response.json();
-          const messagesToDelete = allMessages.filter(
-            msg => msg.sender_id === userId && msg.receiver_id === user.id
-          );
+          const data = await response.json();
+          await fetchSentRequests();
           
-          for (const msg of messagesToDelete) {
-            await apiRequest(`http://localhost:3001/messages/${msg.id}`, {
-              method: 'DELETE'
+          if (socket && isConnected) {
+            socket.emit('contact_request_sent', { 
+              receiverId: userId,
+              requestId: data.id 
             });
           }
           
-          setMessageRequests(messageRequests.filter(req => req.userId !== userId));
+          alert('Contact request sent!');
+          setShowAddUser(false);
+          setEmailSearch('');
+          setEmailSearchResults([]);
+        } else {
+          const error = await response.json();
+          alert(error.error || 'Failed to send contact request');
+        }
+      }
+    } catch (error) {
+      console.error('Error sending contact request:', error);
+      alert('Failed to send contact request');
+    }
+  };
+
+  const removeContact = async (userId) => {
+    if (window.confirm('Remove this contact? You will no longer see your conversation history, but they will still have access to all messages.')) {
+      try {
+        const response = await apiRequest(`http://localhost:3001/contacts/${userId}`, {
+          method: 'DELETE'
+        });
+
+        if (response.ok) {
+          await fetchContacts();
+          await fetchSentRequests();
+          
           if (selectedUser?.id === userId) {
             setSelectedUser(null);
           }
+
+          setMessages([]);
+          setLastMessages(prev => {
+            const updated = { ...prev };
+            delete updated[userId];
+            return updated;
+          });
+          setUnreadCounts(prev => {
+            const updated = { ...prev };
+            delete updated[userId];
+            return updated;
+          });
+          
+          await fetchWaitingMessages();
+        } else {
+          const error = await response.json();
+          alert(error.error || 'Failed to remove contact');
         }
       } catch (error) {
-        console.error('Error deleting messages:', error);
+        console.error('Error removing contact:', error);
+        alert('Failed to remove contact');
       }
     }
   };
 
-  const addContact = (userId) => {
-    if (!contacts.includes(userId)) {
-      const newContacts = [...contacts, userId];
-      setContacts(newContacts);
-      saveContactsToStorage(newContacts);
-      setShowAddUser(false);
-      setEmailSearch('');
-      setEmailSearchResults([]);
+  const blockUser = async (userId) => {
+    if (!socket || !isConnected) {
+      alert('Cannot block user: Not connected to server');
+      return;
+    }
+
+    if (window.confirm('Block this user? They will not be able to send you messages.')) {
+      socket.emit('block_user', { blockedUserId: userId });
+      
+      if (selectedUser?.id === userId) {
+        setSelectedUser(null);
+      }
+      
+      setWaitingMessages(prev => prev.filter(msg => msg.sender_id !== userId));
+      
+      setTimeout(() => {
+        fetchBlockedUsers();
+      }, 300);
     }
   };
 
-  const removeContact = (userId) => {
-    const newContacts = contacts.filter(id => id !== userId);
-    setContacts(newContacts);
-    saveContactsToStorage(newContacts);
-    if (selectedUser?.id === userId) {
-      setSelectedUser(null);
+  const unblockUser = async (userId) => {
+    if (!socket || !isConnected) {
+      alert('Cannot unblock user: Not connected to server');
+      return;
+    }
+
+    if (window.confirm('Unblock this user?')) {
+      socket.emit('unblock_user', { blockedUserId: userId });
+      
+      if (showAddUser && emailSearch) {
+        setTimeout(() => {
+          searchUserByEmail();
+        }, 300);
+      }
+    }
+  };
+
+  const openChatWithUser = (targetUser) => {
+    const isContact = contacts.some(c => c.id === targetUser.id);
+    
+    if (isContact) {
+      setSelectedUser(targetUser);
+    } else {
+      const isBlocked = blockedUsers.some(b => b.id === targetUser.id);
+      if (isBlocked) {
+        alert('This user is blocked. Unblock them first to chat.');
+        return;
+      }
+      
+      setSelectedUser({ ...targetUser, isWaiting: true });
+      setPendingMessageUser(targetUser);
+      setShowWarningModal(true);
+    }
+    
+    setShowAddUser(false);
+    setEmailSearch('');
+    setEmailSearchResults([]);
+  };
+
+  const handleSelectUser = (contact) => {
+    setSelectedUser(contact);
+    
+    if (socket && isConnected && unreadCounts[contact.id] > 0) {
+      socket.emit('mark_read', { senderId: contact.id });
+      
+      setUnreadCounts(prev => ({
+        ...prev,
+        [contact.id]: 0
+      }));
     }
   };
 
@@ -275,8 +647,10 @@ export default function Chat({ user }) {
       return;
     }
 
-    const results = allUsers.filter(u => 
-      u.email.toLowerCase().includes(emailSearch.toLowerCase())
+    const results = allUsers.filter(u =>
+      u.email.toLowerCase().includes(emailSearch.toLowerCase()) &&
+      !blockedByOthers.includes(u.id) &&
+      !blockedUsers.some(b => b.id === u.id)
     );
     setEmailSearchResults(results);
   };
@@ -297,36 +671,20 @@ export default function Chat({ user }) {
       return;
     }
 
-    try {
-      const response = await apiRequest(`http://localhost:3001/messages/${msgId}`, {
-        method: 'PUT',
-        body: JSON.stringify({ message: editingText })
+    if (socket && isConnected) {
+      socket.emit('edit_message', {
+        messageId: msgId,
+        newMessage: editingText
       });
-      
-      if (response.ok) {
-        fetchMessages();
-        fetchLastMessagesForContacts();
-        cancelEditing();
-      }
-    } catch (error) {
-      console.error('Error editing message:', error);
+      cancelEditing();
     }
   };
 
   const handleDeleteMessage = async (id) => {
     if (!window.confirm('Are you sure you want to delete this message?')) return;
     
-    try {
-      const response = await apiRequest(`http://localhost:3001/messages/${id}/delete`, {
-        method: 'PUT'
-      });
-      
-      if (response.ok) {
-        fetchMessages();
-        fetchLastMessagesForContacts();
-      }
-    } catch (error) {
-      console.error('Error deleting message:', error);
+    if (socket && isConnected) {
+      socket.emit('delete_message', { messageId: id });
     }
   };
 
@@ -373,12 +731,12 @@ export default function Chat({ user }) {
     return message.substring(0, maxLength) + '...';
   };
 
-  const contactUsers = allUsers.filter(u => contacts.includes(u.id));
-  const filteredContacts = contactUsers.filter(u =>
+  const filteredContacts = contacts.filter(u =>
     u.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const totalRequestsCount = messageRequests.reduce((sum, req) => sum + req.unreadCount, 0);
+  const totalRequestsCount = contactRequests.filter(req => !blockedUsers.some(b => b.id === req.sender_id)).length;
+  const totalWaitingCount = waitingMessages.length;
 
   return (
     <>
@@ -450,16 +808,23 @@ export default function Chat({ user }) {
         }
       `}</style>
 
-      <div className="flex h-[calc(100vh-48px)] bg-white rounded-xl overflow-hidden shadow-lg">
+      <div className="flex h-screen bg-gray-50 overflow-hidden">
         {/* Sidebar */}
-        <div className="w-96 border-r-2 border-blue-100 flex flex-col" style={{ animation: 'slideInLeft 0.4s ease-out' }}>
+        <div className="w-96 min-w-[384px] bg-white border-r-2 border-blue-200 flex flex-col" style={{ animation: 'slideInLeft 0.4s ease-out' }}>
           {/* Sidebar Header */}
-          <div className="p-5 bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex justify-between items-center">
-            <h2 className="m-0 text-xl font-semibold flex items-center gap-2">
-              <MessageSquare size={24} className="animate-bounce" /> Messages
-            </h2>
+          <div className="p-5 bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex justify-between items-center relative overflow-hidden">
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12" />
+            <div className="flex items-center gap-3 relative z-10">
+              <h2 className="m-0 text-xl font-semibold flex items-center gap-2">
+                <MessageSquare size={24} className="animate-bounce" /> Messages
+              </h2>
+              <div className="flex items-center gap-1.5" title={isConnected ? 'Connected' : 'Disconnected'}>
+                <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
+                <span className="text-xs opacity-75">{isConnected ? 'Live' : 'Offline'}</span>
+              </div>
+            </div>
             <button 
-              className="bg-white/20 border border-white/30 text-white w-9 h-9 min-w-[36px] min-h-[36px] rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 hover:bg-white/30 hover:scale-110 hover:rotate-90 active:scale-95 group relative overflow-hidden"
+              className="bg-white/20 border border-white/30 text-white w-9 h-9 min-w-[36px] min-h-[36px] rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 hover:bg-white/30 hover:scale-110 hover:rotate-90 active:scale-95 group relative overflow-hidden z-10"
               onClick={() => setShowAddUser(!showAddUser)}
               title="Add Contact"
             >
@@ -507,32 +872,113 @@ export default function Chat({ user }) {
                 {emailSearchResults.length === 0 && emailSearch && (
                   <p className="text-center text-slate-500 py-5 text-sm animate-pulse">No users found</p>
                 )}
-                {emailSearchResults.map((u, index) => (
-              <div 
-                key={u.id} 
-                className="flex items-center p-3 border border-blue-100 rounded-lg mb-2 gap-3 transition-all duration-300 hover:border-blue-300 hover:shadow-md hover:scale-[1.02]"
-                style={{ animation: `slideInRight 0.3s ease-out ${index * 0.05}s backwards` }}
-              >
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white overflow-hidden transition-transform duration-300 hover:scale-110">
-                  {u.profile_image ? (
-                    <img src={`http://localhost:3001${u.profile_image.startsWith('/') ? '' : '/'}${u.profile_image}`} alt={u.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <User size={20} />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <div className="font-semibold text-slate-800 text-sm">{u.name}</div>
-                  <div className="text-xs text-slate-500">{u.email}</div>
-                </div>
-                <button
-                  onClick={() => addContact(u.id)}
-                  className="bg-blue-500 text-white border-none rounded-md px-4 py-1.5 text-xs font-semibold cursor-pointer transition-all duration-300 hover:bg-blue-600 hover:scale-105 hover:shadow-md active:scale-95 disabled:bg-slate-300 disabled:cursor-not-allowed disabled:opacity-60"
-                  disabled={contacts.includes(u.id)}
-                >
-                  {contacts.includes(u.id) ? 'Added' : 'Add'}
-                </button>
-              </div>
-            ))}
+                {emailSearchResults.map((u, index) => {
+                  const incomingRequest = contactRequests.find(req => req.sender_id === u.id);
+                  const isBlocked = blockedUsers.some(b => b.id === u.id);
+                  
+                  return (
+                    <div 
+                      key={u.id} 
+                      className="flex items-center p-3 border border-blue-100 rounded-lg mb-2 gap-3 transition-all duration-300 hover:border-blue-300 hover:shadow-md hover:scale-[1.02]"
+                      style={{ animation: `slideInRight 0.3s ease-out ${index * 0.05}s backwards` }}
+                    >
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white overflow-hidden transition-transform duration-300 hover:scale-110 relative">
+                        {u.profile_image ? (
+                          <img src={`http://localhost:3001${u.profile_image.startsWith('/') ? '' : '/'}${u.profile_image}`} alt={u.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <User size={20} />
+                        )}
+                        {isBlocked && (
+                          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                            <ShieldOff size={16} className="text-white" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div 
+                          className="font-semibold text-slate-800 text-sm cursor-pointer hover:text-blue-600 transition-colors duration-200"
+                          onClick={() => !isBlocked && openChatWithUser(u)}
+                          title={isBlocked ? "Blocked user" : "Click to open chat"}
+                        >
+                          {u.name} {!isBlocked && '💬'}
+                        </div>
+                        <div className="text-xs text-slate-500">{u.email}</div>
+                        {isBlocked && (
+                          <span className="bg-red-100 text-red-600 text-[10px] font-bold py-0.5 px-2 rounded-full mt-1 inline-block shadow-sm">
+                            BLOCKED
+                          </span>
+                        )}
+                        {!isBlocked && incomingRequest && (
+                          <span className="bg-slate-600 text-white text-[10px] font-bold py-0.5 px-2 rounded-full mt-1 inline-block shadow-sm">
+                            REQUEST SENT
+                          </span>
+                        )}
+                      </div>
+                      
+                      {isBlocked ? (
+                        <button
+                          onClick={() => unblockUser(u.id)}
+                          className="bg-blue-500 text-white border-none rounded-md px-4 py-1.5 text-xs font-semibold cursor-pointer transition-all duration-300 hover:bg-blue-600 hover:scale-105 hover:shadow-md active:scale-95 flex items-center gap-1"
+                        >
+                          <Shield size={14} />
+                          Unblock
+                        </button>
+                      ) : incomingRequest ? (
+                        <div className="flex gap-2">
+                          <button 
+                            className="py-1.5 px-3 bg-blue-500 text-white border-none rounded-md text-xs font-semibold cursor-pointer transition-all duration-300 hover:bg-blue-600 hover:scale-105 active:scale-95"
+                            onClick={async () => {
+                              await acceptContactRequest(incomingRequest.id, u.id);
+                              setShowAddUser(false);
+                              setEmailSearch('');
+                              setEmailSearchResults([]);
+                            }}
+                          >
+                            Accept
+                          </button>
+                          <button 
+                            className="py-1.5 px-3 bg-red-100 text-red-600 border border-red-300 rounded-md text-xs font-semibold cursor-pointer transition-all duration-300 hover:bg-red-200 hover:border-red-600 hover:scale-105 active:scale-95"
+                            onClick={async () => {
+                              try {
+                                const response = await apiRequest(`http://localhost:3001/contact-requests/${incomingRequest.id}`, {
+                                  method: 'PATCH',
+                                  body: JSON.stringify({ status: 'declined' })
+                                });
+                                
+                                if (response.ok) {
+                                  if (socket && isConnected) {
+                                    socket.emit('contact_request_declined', { requestId: incomingRequest.id });
+                                  }
+                                  await fetchContactRequests();
+                                  await fetchSentRequests();
+                                  searchUserByEmail();
+                                }
+                              } catch (error) {
+                                console.error('Error declining request:', error);
+                              }
+                            }}
+                          >
+                            Decline
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            const isContact = contacts.some(c => c.id === u.id);
+                            if (isContact || sentRequests.includes(u.id)) {
+                              return;
+                            }
+                            sendContactRequest(u.id);
+                          }}
+                          className="bg-blue-500 text-white border-none rounded-md px-4 py-1.5 text-xs font-semibold cursor-pointer transition-all duration-300 hover:bg-blue-600 hover:scale-105 hover:shadow-md active:scale-95 disabled:bg-slate-600 disabled:text-white disabled:cursor-not-allowed disabled:opacity-100"
+                          disabled={contacts.some(c => c.id === u.id) || sentRequests.includes(u.id)}
+                        >
+                          {contacts.some(c => c.id === u.id) ? 'Added' : sentRequests.includes(u.id) ? 'Request Sent' : 'Add Contact'}
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -540,21 +986,45 @@ export default function Chat({ user }) {
           {/* Tabs */}
           <div className="flex bg-white border-b-2 border-blue-100">
             <button 
-              className={`flex-1 py-3.5 px-4 bg-transparent border-none text-slate-500 text-sm font-semibold cursor-pointer transition-all duration-300 flex items-center justify-center gap-2 relative border-b-[3px] border-transparent hover:bg-blue-50 hover:text-slate-800 ${activeTab === 'contacts' ? 'text-slate-800 border-b-blue-500 bg-blue-50' : ''}`}
+              className={`flex-1 py-2.5 px-3 bg-transparent border-none text-slate-500 text-xs font-semibold cursor-pointer transition-all duration-300 flex items-center justify-center gap-1.5 relative border-b-[3px] border-transparent hover:bg-blue-50 hover:text-slate-800 ${activeTab === 'contacts' ? 'text-slate-800 border-b-blue-500 bg-blue-50' : ''}`}
               onClick={() => setActiveTab('contacts')}
             >
-              <User size={16} className="transition-transform duration-300 hover:scale-110" />
+              <User size={14} className="transition-transform duration-300 hover:scale-110" />
               Contacts
             </button>
             <button 
-              className={`flex-1 py-3.5 px-4 bg-transparent border-none text-slate-500 text-sm font-semibold cursor-pointer transition-all duration-300 flex items-center justify-center gap-2 relative border-b-[3px] border-transparent hover:bg-blue-50 hover:text-slate-800 ${activeTab === 'requests' ? 'text-slate-800 border-b-blue-500 bg-blue-50' : ''}`}
+              className={`flex-1 py-2.5 px-3 bg-transparent border-none text-slate-500 text-xs font-semibold cursor-pointer transition-all duration-300 flex items-center justify-center gap-1.5 relative border-b-[3px] border-transparent hover:bg-blue-50 hover:text-slate-800 ${activeTab === 'requests' ? 'text-slate-800 border-b-blue-500 bg-blue-50' : ''}`}
               onClick={() => setActiveTab('requests')}
             >
-              <Clock size={16} className="transition-transform duration-300 hover:scale-110" />
+              <Clock size={14} className="transition-transform duration-300 hover:scale-110" />
               Requests
               {totalRequestsCount > 0 && (
-                <span className="bg-red-600 text-white text-[10px] font-bold py-0.5 px-1.5 rounded-xl min-w-[18px] h-[18px] flex items-center justify-center animate-bounce shadow-lg">
+                <span className="bg-red-600 text-white text-[9px] font-bold py-0.5 px-1 rounded-xl min-w-[16px] h-[16px] flex items-center justify-center animate-bounce shadow-lg">
                   {totalRequestsCount}
+                </span>
+              )}
+            </button>
+            <button 
+              className={`flex-1 py-2.5 px-3 bg-transparent border-none text-slate-500 text-xs font-semibold cursor-pointer transition-all duration-300 flex items-center justify-center gap-1.5 relative border-b-[3px] border-transparent hover:bg-blue-50 hover:text-slate-800 ${activeTab === 'waiting' ? 'text-slate-800 border-b-blue-500 bg-blue-50' : ''}`}
+              onClick={() => setActiveTab('waiting')}
+            >
+              <MessageCircle size={14} className="transition-transform duration-300 hover:scale-110" />
+              Waiting
+              {totalWaitingCount > 0 && (
+                <span className="bg-orange-600 text-white text-[9px] font-bold py-0.5 px-1 rounded-xl min-w-[16px] h-[16px] flex items-center justify-center animate-bounce shadow-lg">
+                  {totalWaitingCount}
+                </span>
+              )}
+            </button>
+            <button 
+              className={`flex-1 py-2.5 px-3 bg-transparent border-none text-slate-500 text-xs font-semibold cursor-pointer transition-all duration-300 flex items-center justify-center gap-1.5 relative border-b-[3px] border-transparent hover:bg-blue-50 hover:text-slate-800 ${activeTab === 'blocked' ? 'text-slate-800 border-b-blue-500 bg-blue-50' : ''}`}
+              onClick={() => setActiveTab('blocked')}
+            >
+              <ShieldOff size={14} className="transition-transform duration-300 hover:scale-110" />
+              Blocked
+              {blockedUsers.length > 0 && (
+                <span className="bg-gray-600 text-white text-[9px] font-bold py-0.5 px-1 rounded-xl min-w-[16px] h-[16px] flex items-center justify-center shadow-lg">
+                  {blockedUsers.length}
                 </span>
               )}
             </button>
@@ -567,7 +1037,7 @@ export default function Chat({ user }) {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={activeTab === 'contacts' ? 'Search contacts...' : 'Search requests...'}
+              placeholder={activeTab === 'contacts' ? 'Search contacts...' : activeTab === 'requests' ? 'Search requests...' : activeTab === 'blocked' ? 'Search blocked users...' : 'Search waiting messages...'}
               className="w-full py-2.5 pr-10 pl-10 border-2 border-gray-200 rounded-[20px] text-sm outline-none transition-all duration-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:pl-11"
             />
             {searchQuery && (
@@ -595,6 +1065,7 @@ export default function Chat({ user }) {
                   const lastMsg = lastMessages[u.id];
                   const unreadCount = unreadCounts[u.id] || 0;
                   const isUnread = unreadCount > 0;
+                  const isOnline = onlineUsers.includes(u.id);
                   
                   return (
                     <div
@@ -602,20 +1073,32 @@ export default function Chat({ user }) {
                       className={`flex items-center py-4 px-5 cursor-pointer transition-all duration-300 border-b border-blue-100 hover:bg-blue-50 hover:translate-x-1 group ${selectedUser?.id === u.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''} ${isUnread ? 'bg-blue-50/30' : ''}`}
                       style={{ animation: `slideInLeft 0.3s ease-out ${index * 0.05}s backwards` }}
                     >
-                      <div onClick={() => setSelectedUser(u)} className="flex items-center flex-1 cursor-pointer gap-3">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white mr-3 overflow-hidden transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg relative">
+                      <div onClick={() => handleSelectUser(u)} className="flex items-center flex-1 cursor-pointer gap-3">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white mr-3 overflow-visible transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg relative">
                           {u.profile_image ? (
-                            <img src={`http://localhost:3001/${u.profile_image}`} alt={u.name} className="w-full h-full object-cover" />
+                            <img src={`http://localhost:3001/${u.profile_image}`} alt={u.name} className="w-full h-full object-cover rounded-full" />
                           ) : (
                             <User size={24} />
                           )}
                           {isUnread && (
                             <div className="absolute inset-0 bg-blue-400/20 animate-ping rounded-full" />
                           )}
+                          {isOnline ? (
+                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full z-20" />
+                          ) : (
+                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-gray-400 border-2 border-white rounded-full z-20" />
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-center mb-1">
-                            <div className="font-semibold text-slate-800">{u.name}</div>
+                            <div className="font-semibold text-slate-800 flex items-center gap-1.5">
+                              {u.name}
+                              {isOnline ? (
+                                <span className="text-[10px] text-green-600 font-normal">• Online</span>
+                              ) : (
+                                <span className="text-[10px] text-gray-400 font-normal">• Offline</span>
+                              )}
+                            </div>
                             {unreadCount > 0 && (
                               <span className="bg-blue-600 text-white text-[11px] font-bold py-0.5 px-1.5 rounded-xl min-w-[18px] h-[18px] flex items-center justify-center shadow-md animate-pulse">
                                 {unreadCount}
@@ -649,31 +1132,25 @@ export default function Chat({ user }) {
                   );
                 })
               )
-            ) : (
-              messageRequests.length === 0 ? (
+            ) : activeTab === 'requests' ? (
+              contactRequests.filter(req => !blockedUsers.some(b => b.id === req.sender_id)).length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-15 px-5 text-slate-500 text-center" style={{ animation: 'fadeIn 0.4s ease-out' }}>
                   <Clock size={32} className="animate-pulse" />
-                  <p className="my-2">No message requests</p>
-                  <p className="text-xs opacity-70">Users not in your contacts will appear here</p>
+                  <p className="my-2">No requests</p>
+                  <p className="text-xs opacity-70">Contact requests will appear here</p>
                 </div>
               ) : (
-                messageRequests.map((req, index) => {
-                  const reqUser = allUsers.find(u => u.id === req.userId);
-                  if (!reqUser) return null;
-                  
+                contactRequests.filter(req => !blockedUsers.some(b => b.id === req.sender_id)).map((req, index) => {
                   return (
                     <div 
-                      key={req.userId} 
+                      key={`contact-${req.sender_id}`} 
                       className="flex py-4 px-5 border-b border-blue-100 gap-3 bg-blue-50/30 transition-all duration-300 hover:bg-blue-50/60 hover:translate-x-1"
                       style={{ animation: `slideInLeft 0.3s ease-out ${index * 0.05}s backwards` }}
                     >
-                      <div 
-                        onClick={() => viewMessageRequest(req.userId)}
-                        className="flex gap-3 cursor-pointer flex-1"
-                      >
+                      <div className="flex gap-3 flex-1">
                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white overflow-hidden transition-all duration-300 hover:scale-110 hover:shadow-lg relative">
-                          {req.userImage ? (
-                            <img src={`http://localhost:3001/${req.userImage}`} alt={req.userName} className="w-full h-full object-cover" />
+                          {req.sender_image ? (
+                            <img src={`http://localhost:3001/${req.sender_image}`} alt={req.sender_name} className="w-full h-full object-cover" />
                           ) : (
                             <User size={24} />
                           )}
@@ -681,34 +1158,55 @@ export default function Chat({ user }) {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-center mb-1.5">
-                            <div className="font-semibold text-slate-800">{req.userName}</div>
-                            {req.unreadCount > 0 && (
-                              <span className="bg-blue-600 text-white text-[11px] font-bold py-0.5 px-1.5 rounded-xl min-w-[18px] h-[18px] flex items-center justify-center shadow-md animate-bounce">
-                                {req.unreadCount}
-                              </span>
-                            )}
+                            <div className="font-semibold text-slate-800">{req.sender_name}</div>
+                            <span className="bg-blue-100 text-blue-800 text-[10px] font-bold py-0.5 px-2 rounded-full">
+                              CONTACT REQUEST
+                            </span>
                           </div>
-                          <div className="text-[13px] leading-tight whitespace-nowrap overflow-hidden text-ellipsis text-slate-800 font-semibold">
-                            {truncateMessage(req.lastMessage)}
+                          <div className="text-[13px] leading-tight text-slate-600">
+                            Wants to add you as a contact
+                          </div>
+                          <div className="text-[11px] text-slate-400 mb-2">
+                            {formatTime(req.created_at)}
                           </div>
                           <div className="flex gap-2 mt-2.5">
                             <button 
                               className="flex-1 py-2 px-3 bg-blue-500 text-white border-none rounded-md text-xs font-semibold cursor-pointer transition-all duration-300 hover:bg-blue-600 hover:-translate-y-1 hover:shadow-lg active:scale-95"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                acceptMessageRequest(req.userId);
+                                acceptContactRequest(req.id, req.sender_id);
                               }}
-                              >
+                            >
                               Accept
                             </button>
                             <button 
                               className="flex-1 py-2 px-3 bg-red-100 text-red-600 border border-red-300 rounded-md text-xs font-semibold cursor-pointer transition-all duration-300 hover:bg-red-200 hover:border-red-600 hover:-translate-y-1 hover:shadow-lg active:scale-95"
-                              onClick={(e) => {
+                              onClick={async (e) => {
                                 e.stopPropagation();
-                                deleteMessageRequest(req.userId);
+                                
+                                try {
+                                  const response = await apiRequest(`http://localhost:3001/contact-requests/${req.id}`, {
+                                    method: 'PATCH',
+                                    body: JSON.stringify({ status: 'declined' })
+                                  });
+                                  
+                                  if (response.ok) {
+                                    if (socket && isConnected) {
+                                      socket.emit('contact_request_declined', { requestId: req.id });
+                                    }
+                                    setContactRequests(prev => prev.filter(r => r.id !== req.id));
+                                    await fetchSentRequests();
+                                  } else {
+                                    const error = await response.json();
+                                    alert(error.error || 'Failed to decline request');
+                                  }
+                                } catch (error) {
+                                  console.error('Error declining request:', error);
+                                  alert('Failed to decline request');
+                                }
                               }}
                             >
-                              Delete
+                              Decline
                             </button>
                           </div>
                         </div>
@@ -717,32 +1215,173 @@ export default function Chat({ user }) {
                   );
                 })
               )
-            )}
+            ) : activeTab === 'waiting' ? (
+              waitingMessages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-15 px-5 text-slate-500 text-center" style={{ animation: 'fadeIn 0.4s ease-out' }}>
+                  <MessageCircle size={32} className="animate-pulse" />
+                  <p className="my-2">No waiting messages</p>
+                  <p className="text-xs opacity-70">Messages from non-contacts will appear here for viewing</p>
+                </div>
+              ) : (
+                waitingMessages.map((msg, index) => {
+                  const msgUser = allUsers.find(u => u.id == msg.userId);
+                  
+                  return (
+                    <div 
+                      key={msg.userId} 
+                      className="flex items-center py-4 px-5 border-b border-orange-100 gap-3 bg-orange-50/30 transition-all duration-300 hover:bg-orange-50/60 hover:translate-x-1 group"
+                      style={{ animation: `slideInLeft 0.3s ease-out ${index * 0.05}s backwards` }}
+                    >
+                      <div 
+                        className="flex gap-3 flex-1 cursor-pointer"
+                        onClick={() => viewMessageRequest(msg.userId)}
+                      >
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white overflow-hidden transition-all duration-300 hover:scale-110 hover:shadow-lg relative">
+                          {msgUser.profile_image ? (
+                            <img src={`http://localhost:3001/${msgUser.profile_image}`} alt={msgUser.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <User size={24} />
+                          )}
+                          <div className="absolute inset-0 bg-orange-400/20 animate-ping rounded-full" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-center mb-1.5">
+                            <div className="font-semibold text-slate-800">
+                              {msgUser.name} <span className="text-gray-400 font-normal text-xs">({msgUser.email})</span>
+                            </div>
+                            {msg.unreadCount > 0 && (
+                              <span className="bg-orange-600 text-white text-[11px] font-bold py-0.5 px-1.5 rounded-xl min-w-[18px] h-[18px] flex items-center justify-center shadow-md animate-bounce">
+                                {msg.unreadCount}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[13px] leading-tight whitespace-nowrap overflow-hidden text-ellipsis text-slate-800 font-semibold">
+                            {truncateMessage(msg.lastMessage)}
+                          </div>
+                          <div className="text-[11px] text-slate-400">
+                            {formatTime(msg.timestamp)}
+                          </div>
+                          <div className="text-[11px] text-orange-600 italic mt-1">
+                            Click to view • Can't reply (not a contact)
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          blockUser(msg.userId);
+                        }}
+                        className="bg-red-100 border border-red-300 text-red-600 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all duration-300 opacity-0 group-hover:opacity-100 hover:bg-red-200 hover:scale-105 active:scale-95 flex items-center gap-1"
+                        title="Block user"
+                      >
+                        <ShieldOff size={14} />
+                        Block
+                      </button>
+                    </div>
+                  );
+                })
+              )
+            ) : activeTab === 'blocked' ? (
+              blockedUsers.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-15 px-5 text-slate-500 text-center" style={{ animation: 'fadeIn 0.4s ease-out' }}>
+                  <ShieldOff size={32} className="animate-pulse" />
+                  <p className="my-2">No blocked users</p>
+                  <p className="text-xs opacity-70">Users you block will appear here</p>
+                </div>
+              ) : (
+                blockedUsers
+                  .filter(u => u.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                  .map((u, index) => (
+                    <div 
+                      key={u.id} 
+                      className="flex items-center py-4 px-5 border-b border-gray-200 gap-3 transition-all duration-300 hover:bg-gray-50"
+                      style={{ animation: `slideInLeft 0.3s ease-out ${index * 0.05}s backwards` }}
+                    >
+                      <div className="w-12 h-12 rounded-full bg-gray-400 flex items-center justify-center text-white overflow-hidden relative">
+                        {u.profile_image ? (
+                          <img src={`http://localhost:3001/${u.profile_image}`} alt={u.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <User size={24} />
+                        )}
+                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                          <ShieldOff size={20} className="text-white" />
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-slate-800">
+                          {u.name}
+                        </div>
+                        <div className="text-xs text-slate-500">{u.email}</div>
+                        <div className="text-[11px] text-slate-400 mt-1">
+                          Blocked {formatTime(u.blocked_at)}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => unblockUser(u.id)}
+                        className="bg-blue-500 text-white border-none rounded-lg px-4 py-2 text-xs font-semibold cursor-pointer transition-all duration-300 hover:bg-blue-600 hover:scale-105 hover:shadow-lg active:scale-95 flex items-center gap-2"
+                      >
+                        <Shield size={14} />
+                        Unblock
+                      </button>
+                    </div>
+                  ))
+              )
+            ) : null}
           </div>
         </div>
 
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col" style={{ animation: 'slideInRight 0.4s ease-out' }}>
+        <div className="flex-1 flex flex-col bg-white" style={{ animation: 'slideInRight 0.4s ease-out' }}>
           {selectedUser ? (
             <>
               {/* Chat Header */}
-              <div className="flex items-center py-4 px-5 bg-gradient-to-br from-blue-600 to-indigo-700 text-white gap-3" style={{ animation: 'slideDown 0.3s ease-out' }}>
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-700 to-purple-700 flex items-center justify-center text-white overflow-hidden transition-all duration-300 hover:scale-110 hover:shadow-xl">
+              <div className="flex items-center py-3.5 px-5 bg-gradient-to-br from-blue-600 to-indigo-700 text-white gap-3 relative overflow-hidden" style={{ animation: 'slideDown 0.3s ease-out' }}>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white overflow-visible transition-all duration-300 hover:scale-110 hover:shadow-xl relative z-10">
                   {selectedUser.profile_image ? (
-                    <img src={`http://localhost:3001/${selectedUser.profile_image}`} alt={selectedUser.name} className="w-full h-full object-cover" />
+                    <img src={`http://localhost:3001/${selectedUser.profile_image}`} alt={selectedUser.name} className="w-full h-full object-cover rounded-full" />
                   ) : (
                     <User size={24} />
                   )}
+                  {/* Online Status Indicator in Chat Header */}
+                  {onlineUsers.includes(selectedUser.id) ? (
+                    <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full z-20" />
+                  ) : (
+                    <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-gray-400 border-2 border-white rounded-full z-20" />
+                  )}
                 </div>
-                <div className="flex-1">
-                  <div className="font-semibold text-base">{selectedUser.name}</div>
+                <div className="flex-1 relative z-10">
+                  <div className="font-semibold text-base flex items-center gap-2">
+                    {selectedUser.name}
+                    {onlineUsers.includes(selectedUser.id) ? (
+                      <span className="text-xs font-normal bg-green-500/20 px-2 py-0.5 rounded-full">Online</span>
+                    ) : (
+                      <span className="text-xs font-normal bg-gray-400/20 px-2 py-0.5 rounded-full">Offline</span>
+                    )}
+                  </div>
                   <div className="text-xs opacity-90 capitalize">{selectedUser.userType}</div>
                 </div>
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-5 bg-slate-50">
-                {messages.map((msg, index) => (
+              <div className="flex-1 overflow-y-auto p-5 bg-gray-100">
+                {selectedUser.isDeleted ? (
+                  <div className="flex flex-col items-center justify-center h-full">
+                    <div className="bg-red-50 border-2 border-red-200 rounded-xl p-8 max-w-md text-center shadow-lg">
+                      <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <User size={32} className="text-red-600" />
+                      </div>
+                      <h3 className="text-xl font-bold text-red-600 mb-2">User Deleted</h3>
+                      <p className="text-slate-700 mb-4">
+                        This user has been deleted. You can not chat with this user anymore.
+                      </p>
+                      <p className="text-sm text-slate-500">
+                        All messages from this user have been permanently removed from the database.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  messages.map((msg, index) => (
                   <div
                       key={msg.id}
                       className={`flex flex-col mb-4 max-w-[100%] group ${msg.sender_id === user.id ? 'self-end items-end' : 'self-start items-start'}`}
@@ -794,7 +1433,7 @@ export default function Chat({ user }) {
                       </div>
                     ) : (
                       <>
-                        <div className={`py-3 px-4 rounded-xl break-words transition-all duration-300 hover:scale-[1.02] ${msg.sender_id === user.id ? 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-br-sm hover:shadow-lg' : 'bg-slate-50 text-slate-800 border border-blue-100 rounded-bl-sm hover:bg-white hover:shadow-md'}`}>
+                        <div className={`py-3 px-4 rounded-xl break-words transition-all duration-300 hover:scale-[1.02] ${msg.sender_id === user.id ? 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-br-sm hover:shadow-lg' : 'bg-white text-slate-800 border border-blue-200 rounded-bl-sm hover:bg-blue-50 hover:shadow-md'}`}>
                           {msg.deleted ? (
                             <i className="text-gray-400 italic">
                               This message has been deleted
@@ -833,12 +1472,13 @@ export default function Chat({ user }) {
                       </>
                     )}
                   </div>
-                ))}
+                  ))
+                )}
                 <div ref={messagesEndRef} />
               </div>
 
               {/* Input Form */}
-              <div className="flex p-4 bg-slate-50 border-t-2 border-blue-100 gap-3">
+              <div className="flex p-4 bg-white border-t-2 border-blue-200 gap-3 shadow-inner">
                 <input
                   type="text"
                   value={newMessage}
@@ -849,14 +1489,14 @@ export default function Chat({ user }) {
                       sendMessage();
                     }
                   }}
-                  placeholder={selectedUser.isRequest ? "Accept request to reply..." : "Type a message..."}
+                  placeholder={selectedUser.isDeleted ? "User has been deleted..." : selectedUser.isRequest ? "Accept request to reply..." : "Type a message..."}
                   className="flex-1 py-3 px-4 border-2 border-gray-200 rounded-3xl text-sm outline-none transition-all duration-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:px-5 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={selectedUser.isRequest}
+                  disabled={selectedUser.isRequest || selectedUser.isDeleted}
                 />
                 <button 
                   onClick={() => sendMessage()} 
                   className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 text-white border-none cursor-pointer flex items-center justify-center transition-all duration-300 hover:bg-blue-600 hover:scale-110 hover:shadow-xl hover:rotate-12 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group"
-                  disabled={selectedUser.isRequest}
+                  disabled={selectedUser.isRequest || selectedUser.isDeleted}
                 >
                   <Send size={20} className="relative z-10 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                   <span className="absolute inset-0 bg-white/20 rounded-full transition-transform duration-300 scale-0 group-hover:scale-100" style={{ animation: 'ripple 0.6s ease-out' }} />
@@ -864,13 +1504,87 @@ export default function Chat({ user }) {
               </div>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-500 gap-4" style={{ animation: 'fadeIn 0.5s ease-out' }}>
-              <User size={64} className="animate-pulse" />
-              <p className="animate-pulse">Select a user to start chatting</p>
+            <div className="flex-1 flex flex-col items-center justify-center text-slate-500 gap-4 bg-gray-100" style={{ animation: 'fadeIn 0.5s ease-out' }}>
+              <div className="bg-white p-8 rounded-xl shadow-lg border-2 border-dashed border-blue-200 flex flex-col items-center gap-4">
+                <User size={64} className="animate-pulse text-blue-400" />
+                <p className="animate-pulse text-lg font-medium">Select a user to start chatting</p>
+                <p className="text-sm text-slate-400">Choose a contact from the sidebar to begin your conversation</p>
+              </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* Warning Modal for Non-Contact Messages */}
+      {showWarningModal && pendingMessageUser && (
+        <>
+          <div
+            onClick={() => {
+              setShowWarningModal(false);
+              setPendingMessageUser(null);
+              setSelectedUser(null);
+            }}
+            className="fixed inset-0 bg-black/50 z-[1000] backdrop-blur-sm"
+            style={{ animation: 'fadeIn 0.3s ease-out' }}
+          />
+          <div
+            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1001] bg-white rounded-2xl shadow-2xl p-8 max-w-md w-[90%]"
+            style={{ animation: 'scaleIn 0.3s ease-out' }}
+          >
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
+                <MessageCircle size={32} className="text-orange-600" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 m-0">
+                Message from Non-Contact
+              </h3>
+              <p className="text-slate-600 m-0">
+                <strong>{pendingMessageUser.name}</strong> ({pendingMessageUser.email}) is not in your contacts.
+              </p>
+              <p className="text-sm text-slate-500 m-0">
+                Do you want to accept messages from this user?
+              </p>
+              
+              <div className="flex gap-3 w-full mt-4">
+                <button
+                  onClick={() => {
+                    // Accept - keep in waiting tab, allow viewing
+                    setShowWarningModal(false);
+                    setPendingMessageUser(null);
+                    // User can now view messages in waiting tab
+                  }}
+                  className="flex-1 py-3 px-6 bg-gradient-to-br from-blue-600 to-indigo-700 text-white border-none rounded-xl text-base font-semibold cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl active:scale-95"
+                >
+                  Yes, Allow
+                </button>
+                <button
+                  onClick={() => {
+                    // Block user
+                    blockUser(pendingMessageUser.id);
+                    setShowWarningModal(false);
+                    setPendingMessageUser(null);
+                    setSelectedUser(null);
+                  }}
+                  className="flex-1 py-3 px-6 bg-red-500 text-white border-none rounded-xl text-base font-semibold cursor-pointer transition-all duration-300 hover:bg-red-600 hover:scale-105 hover:shadow-xl active:scale-95"
+                >
+                  No, Block
+                </button>
+              </div>
+              
+              <button
+                onClick={() => {
+                  setShowWarningModal(false);
+                  setPendingMessageUser(null);
+                  setSelectedUser(null);
+                }}
+                className="mt-2 text-sm text-slate-400 hover:text-slate-600 cursor-pointer bg-none border-none transition-colors duration-200"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }

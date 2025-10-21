@@ -34,11 +34,18 @@ export const useApi = () => {
 // Custom hook for user management
 export const useUsers = () => {
   const [users, setUsers] = useState([]);
-  const { apiRequest } = useAuth();
+  const { apiRequest, isAdmin } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
+    // Only admins can fetch all users
+    if (!isAdmin) {
+      setUsers([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -56,9 +63,9 @@ export const useUsers = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiRequest, isAdmin]);
 
-  const addUser = async (userData) => {
+  const addUser = useCallback(async (userData) => {
     try {
       const response = await apiRequest('http://localhost:3001/users', {
         method: 'POST',
@@ -77,9 +84,9 @@ export const useUsers = () => {
       console.error('Error adding user:', err);
       throw err;
     }
-  };
+  }, [apiRequest, fetchUsers]);
 
-  const updateUser = async (id, userData) => {
+  const updateUser = useCallback(async (id, userData) => {
     try {
       const response = await apiRequest(`http://localhost:3001/users/${id}`, {
         method: 'PUT',
@@ -98,9 +105,9 @@ export const useUsers = () => {
       console.error('Error updating user:', err);
       throw err;
     }
-  };
+  }, [apiRequest, fetchUsers]);
 
-  const deleteUser = async (id) => {
+  const deleteUser = useCallback(async (id) => {
     try {
       const response = await apiRequest(`http://localhost:3001/users/${id}`, {
         method: 'DELETE'
@@ -118,7 +125,7 @@ export const useUsers = () => {
       console.error('Error deleting user:', err);
       throw err;
     }
-  };
+  }, [apiRequest, fetchUsers]);
 
   return {
     users,
@@ -138,7 +145,7 @@ export const useTasks = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -156,19 +163,41 @@ export const useTasks = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiRequest]);
 
-  const addTask = async (taskData) => {
+  const addTask = useCallback(async (taskData) => {
     try {
+      // Transform the data to match server expectations
+      const payload = {
+        ...taskData,
+        assignees: taskData.assignee || [] // Convert assignee to assignees
+      };
+      delete payload.assignee; // Remove the old field
+
       const response = await apiRequest('http://localhost:3001/tasks', {
         method: 'POST',
-        body: JSON.stringify(taskData)
+        body: JSON.stringify(payload)
       });
       
       if (response.ok) {
-        const data = await response.json();
-        await fetchTasks(); // Refresh the list
-        return data;
+        const serverResponse = await response.json();
+        
+        // Since server only returns id and message, create the full task object
+        const newTask = {
+          id: serverResponse.id,
+          text: payload.text,
+          description: payload.description,
+          assignees: payload.assignees,
+          deadline: payload.deadline,
+          priority: payload.priority,
+          status: payload.status,
+          progress: payload.progress || 0,
+          completed: false
+        };
+        
+        // Add the new task to the beginning of the list
+        setTasks(prevTasks => [newTask, ...prevTasks]);
+        return newTask;
       } else {
         const errorData = await response.json();
         throw new Error(errorData.error);
@@ -177,9 +206,9 @@ export const useTasks = () => {
       console.error('Error adding task:', err);
       throw err;
     }
-  };
+  }, [apiRequest]);
 
-  const updateTask = async (id, taskData) => {
+  const updateTask = useCallback(async (id, taskData) => {
     try {
       const response = await apiRequest(`http://localhost:3001/tasks/${id}`, {
         method: 'PUT',
@@ -198,9 +227,9 @@ export const useTasks = () => {
       console.error('Error updating task:', err);
       throw err;
     }
-  };
+  }, [apiRequest, fetchTasks]);
 
-  const deleteTask = async (id) => {
+  const deleteTask = useCallback(async (id) => {
     try {
       const response = await apiRequest(`http://localhost:3001/tasks/${id}`, {
         method: 'DELETE'
@@ -218,7 +247,7 @@ export const useTasks = () => {
       console.error('Error deleting task:', err);
       throw err;
     }
-  };
+  }, [apiRequest, fetchTasks]);
 
   return {
     tasks,

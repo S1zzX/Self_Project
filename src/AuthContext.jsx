@@ -245,6 +245,7 @@ export const AuthProvider = ({ children }) => {
   const value = useMemo(() => ({
     user,
     accessToken,
+    token: accessToken,  // Add alias for socket connection
     loading,
     login,
     logout,

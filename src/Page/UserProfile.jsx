@@ -11,6 +11,7 @@ export default function UserProfile({ user, onUserChange }) {
 
   // Account form state
   const [accountData, setAccountData] = useState({ name: '', email: '' });
+  const [originalAccountData, setOriginalAccountData] = useState({ name: '', email: '' });
   const [accountErrors, setAccountErrors] = useState({});
   const [accountSuccess, setAccountSuccess] = useState('');
 
@@ -30,10 +31,12 @@ export default function UserProfile({ user, onUserChange }) {
 
   // Initialize from prop user
   useEffect(() => {
-    setAccountData({
+    const initialData = {
       name: user?.name || '',
       email: user?.email || ''
-    });
+    };
+    setAccountData(initialData);
+    setOriginalAccountData(initialData);
   }, [user]);
 
   // Build full image URL from saved backend path
@@ -123,9 +126,22 @@ export default function UserProfile({ user, onUserChange }) {
     return errors;
   };
 
+  // Check if account data has changed
+  const hasAccountChanges = () => {
+    return accountData.name.trim() !== originalAccountData.name.trim() || 
+           accountData.email.trim().toLowerCase() !== originalAccountData.email.trim().toLowerCase();
+  };
+
   const handleAccountUpdate = async (e) => {
     e.preventDefault();
     setAccountSuccess('');
+    
+    // Check if there are any changes
+    if (!hasAccountChanges()) {
+      setAccountErrors({ submit: 'No changes detected. Please modify your information before saving.' });
+      return;
+    }
+
     const errors = validateAccount();
     setAccountErrors(errors);
     if (Object.keys(errors).length > 0) return;
@@ -150,6 +166,13 @@ export default function UserProfile({ user, onUserChange }) {
           email: updated.email || accountData.email.trim().toLowerCase() 
         };
         localStorage.setItem('user', JSON.stringify(newUser));
+        
+        // Update original data to reflect the saved changes
+        const savedData = {
+          name: updated.name || accountData.name.trim(),
+          email: updated.email || accountData.email.trim().toLowerCase()
+        };
+        setOriginalAccountData(savedData);
         
         if (typeof onUserChange === 'function') {
           onUserChange(newUser);
@@ -211,6 +234,12 @@ export default function UserProfile({ user, onUserChange }) {
     e.preventDefault();
     setPasswordSuccess('');
     setPasswordErrors({});
+    
+    // Check if all password fields are filled
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      setPasswordErrors({ submit: 'Please fill in all password fields.' });
+      return;
+    }
     
     const errors = validatePassword();
     if (Object.keys(errors).length > 0) {
@@ -472,9 +501,9 @@ export default function UserProfile({ user, onUserChange }) {
                 Full Name
               </label>
               <div className="relative flex items-center w-full group">
-                <UserIcon size={20} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b] pointer-events-none transition-all duration-300 group-focus-within:text-[#2563eb] group-focus-within:scale-110" />
+                <UserIcon size={20} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b] pointer-events-none transition-all duration-300 group-focus-within:text-[#2563eb] group-focus-within:scale-110 z-10" />
                 <input
-                  className={`w-full py-3.5 pl-11 pr-4 border-2 rounded-lg text-base transition-all duration-300 bg-white transform hover:scale-[1.01] focus:scale-[1.02] ${
+                  className={`w-full py-3.5 pl-11 pr-4 border-2 rounded-lg text-base transition-all duration-300 bg-white transform hover:scale-[1.01] focus:scale-[1.02] relative ${
                     accountErrors.name 
                       ? 'border-red-600 shadow-[0_0_0_4px_rgba(220,38,38,0.1)] animate-shake' 
                       : 'border-[#e2e8f0] focus:border-[#2563eb] focus:shadow-[0_0_0_8px_rgba(37,99,235,0.06)]'
@@ -500,9 +529,9 @@ export default function UserProfile({ user, onUserChange }) {
                 Email Address
               </label>
               <div className="relative flex items-center w-full group">
-                <Mail size={20} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b] pointer-events-none transition-all duration-300 group-focus-within:text-[#2563eb] group-focus-within:scale-110" />
+                <Mail size={20} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b] pointer-events-none transition-all duration-300 group-focus-within:text-[#2563eb] group-focus-within:scale-110 z-10" />
                 <input
-                  className={`w-full py-3.5 pl-11 pr-4 border-2 rounded-lg text-base transition-all duration-300 bg-white transform hover:scale-[1.01] focus:scale-[1.02] ${
+                  className={`w-full py-3.5 pl-11 pr-4 border-2 rounded-lg text-base transition-all duration-300 bg-white transform hover:scale-[1.01] focus:scale-[1.02] relative ${
                     accountErrors.email 
                       ? 'border-red-600 shadow-[0_0_0_4px_rgba(220,38,38,0.1)] animate-shake' 
                       : 'border-[#e2e8f0] focus:border-[#2563eb] focus:shadow-[0_0_0_8px_rgba(37,99,235,0.06)]'
@@ -540,8 +569,9 @@ export default function UserProfile({ user, onUserChange }) {
                 className="px-7 py-3.5 rounded-lg text-base font-semibold transition-all duration-300 bg-slate-200/50 text-slate-600 border-2 border-slate-200/80 hover:bg-slate-200/80 hover:border-[#2563eb] hover:text-[#2563eb] hover:-translate-y-1 hover:scale-105 hover:shadow-md active:translate-y-0 active:scale-95"
                 type="button" 
                 onClick={() => { 
-                  setAccountData({ name: user?.name || '', email: user?.email || ''}); 
+                  setAccountData(originalAccountData); 
                   setAccountErrors({}); 
+                  setAccountSuccess('');
                 }}
               >
                 Cancel
@@ -553,11 +583,13 @@ export default function UserProfile({ user, onUserChange }) {
                   boxShadow: '0 6px 18px rgba(37,99,235,0.16)'
                 }}
                 type="button" 
-                disabled={isLoading} 
+                disabled={isLoading || !hasAccountChanges()} 
                 onClick={handleAccountUpdate}
               >
                 <Save size={16} className="transition-transform duration-300 group-hover:rotate-12 relative z-10" />
-                <span className="relative z-10">{isLoading ? 'Saving...' : 'Save Changes'}</span>
+                <span className="relative z-10">
+                  {isLoading ? 'Saving...' : hasAccountChanges() ? 'Save Changes' : 'No Changes'}
+                </span>
                 <span className="absolute inset-0 bg-white/20 rounded-lg transition-transform duration-300 scale-0 group-hover:scale-100" />
               </button>
             </div>
@@ -575,9 +607,9 @@ export default function UserProfile({ user, onUserChange }) {
                 Current Password
               </label>
               <div className="relative flex items-center w-full group">
-                <Lock size={20} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b] pointer-events-none transition-all duration-300 group-focus-within:text-[#2563eb] group-focus-within:scale-110" />
+                <Lock size={20} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b] pointer-events-none transition-all duration-300 group-focus-within:text-[#2563eb] group-focus-within:scale-110 z-10" />
                 <input
-                  className={`w-full py-3.5 pl-11 pr-12 border-2 rounded-lg text-base transition-all duration-300 bg-white transform hover:scale-[1.01] focus:scale-[1.02] ${
+                  className={`w-full py-3.5 pl-11 pr-12 border-2 rounded-lg text-base transition-all duration-300 bg-white transform hover:scale-[1.01] focus:scale-[1.02] relative ${
                     passwordErrors.currentPassword 
                       ? 'border-red-600 shadow-[0_0_0_4px_rgba(220,38,38,0.1)] animate-shake' 
                       : 'border-[#e2e8f0] focus:border-[#2563eb] focus:shadow-[0_0_0_8px_rgba(37,99,235,0.06)]'
@@ -592,7 +624,7 @@ export default function UserProfile({ user, onUserChange }) {
                 />
                 <button 
                   type="button" 
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 bg-transparent border-none text-[#2563eb] cursor-pointer p-1.5 rounded-md transition-all duration-300 flex items-center justify-center w-8 h-8 hover:text-[#2563eb] hover:bg-[#2563eb]/10 hover:scale-110 active:scale-95"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 bg-transparent border-none text-[#2563eb] cursor-pointer p-1.5 rounded-md transition-all duration-300 flex items-center justify-center w-8 h-8 hover:text-[#2563eb] hover:bg-[#2563eb]/10 hover:scale-110 active:scale-95 z-10"
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                 >
                   {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -610,9 +642,9 @@ export default function UserProfile({ user, onUserChange }) {
                 New Password
               </label>
               <div className="relative flex items-center w-full group">
-                <Lock size={20} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b] pointer-events-none transition-all duration-300 group-focus-within:text-[#2563eb] group-focus-within:scale-110" />
+                <Lock size={20} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b] pointer-events-none transition-all duration-300 group-focus-within:text-[#2563eb] group-focus-within:scale-110 z-10" />
                 <input
-                  className={`w-full py-3.5 pl-11 pr-12 border-2 rounded-lg text-base transition-all duration-300 bg-white transform hover:scale-[1.01] focus:scale-[1.02] ${
+                  className={`w-full py-3.5 pl-11 pr-12 border-2 rounded-lg text-base transition-all duration-300 bg-white transform hover:scale-[1.01] focus:scale-[1.02] relative ${
                     passwordErrors.newPassword 
                       ? 'border-red-600 shadow-[0_0_0_4px_rgba(220,38,38,0.1)] animate-shake' 
                       : 'border-[#e2e8f0] focus:border-[#2563eb] focus:shadow-[0_0_0_8px_rgba(37,99,235,0.06)]'
@@ -627,7 +659,7 @@ export default function UserProfile({ user, onUserChange }) {
                 />
                 <button 
                   type="button" 
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 bg-transparent border-none text-[#2563eb] cursor-pointer p-1.5 rounded-md transition-all duration-300 flex items-center justify-center w-8 h-8 hover:text-[#2563eb] hover:bg-[#2563eb]/10 hover:scale-110 active:scale-95"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 bg-transparent border-none text-[#2563eb] cursor-pointer p-1.5 rounded-md transition-all duration-300 flex items-center justify-center w-8 h-8 hover:text-[#2563eb] hover:bg-[#2563eb]/10 hover:scale-110 active:scale-95 z-10"
                   onClick={() => setShowNewPassword(!showNewPassword)}
                 >
                   {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -685,9 +717,9 @@ export default function UserProfile({ user, onUserChange }) {
               Confirm New Password
             </label>
             <div className="relative flex items-center w-full group">
-              <Lock size={20} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b] pointer-events-none transition-all duration-300 group-focus-within:text-[#2563eb] group-focus-within:scale-110" />
+              <Lock size={20} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748b] pointer-events-none transition-all duration-300 group-focus-within:text-[#2563eb] group-focus-within:scale-110 z-10" />
               <input
-                className={`w-full py-3.5 pl-11 pr-12 border-2 rounded-lg text-base transition-all duration-300 bg-white transform hover:scale-[1.01] focus:scale-[1.02] ${
+                className={`w-full py-3.5 pl-11 pr-12 border-2 rounded-lg text-base transition-all duration-300 bg-white transform hover:scale-[1.01] focus:scale-[1.02] relative ${
                   passwordErrors.confirmPassword 
                     ? 'border-red-600 shadow-[0_0_0_4px_rgba(220,38,38,0.1)] animate-shake' 
                     : 'border-[#e2e8f0] focus:border-[#2563eb] focus:shadow-[0_0_0_8px_rgba(37,99,235,0.06)]'
@@ -702,7 +734,7 @@ export default function UserProfile({ user, onUserChange }) {
               />
               <button 
                 type="button" 
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 bg-transparent border-none text-[#2563eb] cursor-pointer p-1.5 rounded-md transition-all duration-300 flex items-center justify-center w-8 h-8 hover:text-[#2563eb] hover:bg-[#2563eb]/10 hover:scale-110 active:scale-95"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 bg-transparent border-none text-[#2563eb] cursor-pointer p-1.5 rounded-md transition-all duration-300 flex items-center justify-center w-8 h-8 hover:text-[#2563eb] hover:bg-[#2563eb]/10 hover:scale-110 active:scale-95 z-10"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               >
                 {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -746,11 +778,13 @@ export default function UserProfile({ user, onUserChange }) {
                   background: 'linear-gradient(135deg,#2563eb,#8b5cf6)',
                   boxShadow: '0 6px 18px rgba(37,99,235,0.16)'
                 }}
-                disabled={isLoading} 
+                disabled={isLoading || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword} 
                 onClick={handlePasswordUpdate}
               >
                 <Save size={16} className="transition-transform duration-300 group-hover:rotate-12 relative z-10" />
-                <span className="relative z-10">{isLoading ? 'Updating...' : 'Update Password'}</span>
+                <span className="relative z-10">
+                  {isLoading ? 'Updating...' : (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) ? 'Fill All Fields' : 'Update Password'}
+                </span>
                 <span className="absolute inset-0 bg-white/20 rounded-lg transition-transform duration-300 scale-0 group-hover:scale-100" />
               </button>
             </div>

@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { Bell, X, CheckCheck, GripVertical, MailOpen, Mail } from 'lucide-react';
-import { useNotifications } from '../hook/useNotifications';
+import { useNotifications } from '../hooks/useNotifications';
 
 const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
   const dropdownRef = useRef(null);
+  const animationFrameRef = useRef(null);
   
   const { 
     notifications, 
@@ -35,76 +37,132 @@ const NotificationBell = () => {
   const updatePosition = (clientX, clientY) => {
     if (!dropdownRef.current) return;
     
-    const newX = clientX - dragOffset.x;
-    const newY = clientY - dragOffset.y;
+    // Cancel any pending animation frame
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
     
-    const dropdownWidth = dropdownRef.current.offsetWidth;
-    const dropdownHeight = dropdownRef.current.offsetHeight;
-    const maxX = window.innerWidth - dropdownWidth;
-    const maxY = window.innerHeight - dropdownHeight;
-    
-    setPosition({
-      x: Math.max(0, Math.min(newX, maxX)),
-      y: Math.max(0, Math.min(newY, maxY))
+    // Use requestAnimationFrame for smooth 60fps updates
+    animationFrameRef.current = requestAnimationFrame(() => {
+      const newX = clientX - dragOffset.x;
+      const newY = clientY - dragOffset.y;
+      
+      const dropdownWidth = dropdownRef.current.offsetWidth;
+      const dropdownHeight = dropdownRef.current.offsetHeight;
+      const maxX = window.innerWidth - dropdownWidth;
+      const maxY = window.innerHeight - dropdownHeight;
+      
+      setPosition({
+        x: Math.max(0, Math.min(newX, maxX)),
+        y: Math.max(0, Math.min(newY, maxY))
+      });
     });
   };
 
   const handleMouseDown = (e) => {
     if (e.target.closest('.drag-handle')) {
       e.preventDefault();
+      e.stopPropagation();
       setIsDragging(true);
       const rect = dropdownRef.current.getBoundingClientRect();
-      const clientX = e.clientX || e.touches?.[0]?.clientX;
-      const clientY = e.clientY || e.touches?.[0]?.clientY;
+      const clientX = e.clientX;
+      const clientY = e.clientY;
+      
+      setDragStartPos({ x: clientX, y: clientY });
       setDragOffset({
         x: clientX - rect.left,
         y: clientY - rect.top
       });
+      
+      // Add user-select: none to body during drag
+      document.body.style.userSelect = 'none';
+      document.body.style.cursor = 'grabbing';
     }
   };
 
   const handleTouchStart = (e) => {
     if (e.target.closest('.drag-handle')) {
+      e.preventDefault();
+      e.stopPropagation();
       setIsDragging(true);
       const rect = dropdownRef.current.getBoundingClientRect();
       const touch = e.touches[0];
+      
+      setDragStartPos({ x: touch.clientX, y: touch.clientY });
       setDragOffset({
         x: touch.clientX - rect.left,
         y: touch.clientY - rect.top
       });
+      
+      document.body.style.userSelect = 'none';
     }
   };
 
   const handleMouseMove = (e) => {
     if (isDragging) {
       e.preventDefault();
-      const clientX = e.clientX || e.touches?.[0]?.clientX;
-      const clientY = e.clientY || e.touches?.[0]?.clientY;
-      updatePosition(clientX, clientY);
+      e.stopPropagation();
+      updatePosition(e.clientX, e.clientY);
     }
   };
 
   const handleTouchMove = (e) => {
     if (isDragging) {
       e.preventDefault();
+      e.stopPropagation();
       const touch = e.touches[0];
       updatePosition(touch.clientX, touch.clientY);
     }
   };
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
+  const handleMouseUp = (e) => {
+    if (isDragging) {
+      setIsDragging(false);
+      
+      // Restore body styles
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+      
+      // Cancel any pending animation frame
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+      
+      // Check if it was just a click (not a drag)
+      const moveDistance = Math.sqrt(
+        Math.pow(e.clientX - dragStartPos.x, 2) + 
+        Math.pow(e.clientY - dragStartPos.y, 2)
+      );
+      
+      // If moved less than 5px, consider it a click not a drag
+      if (moveDistance < 5) {
+        e.stopPropagation();
+      }
+    }
   };
 
-  const handleTouchEnd = () => {
-    setIsDragging(false);
+  const handleTouchEnd = (e) => {
+    if (isDragging) {
+      setIsDragging(false);
+      document.body.style.userSelect = '';
+      
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+    }
   };
 
   useEffect(() => {
     if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
+      // Use passive: false to allow preventDefault
+      const mouseMoveOptions = { passive: false };
+      const touchMoveOptions = { passive: false };
+      
+      document.addEventListener('mousemove', handleMouseMove, mouseMoveOptions);
       document.addEventListener('mouseup', handleMouseUp);
-      document.addEventListener('touchmove', handleTouchMove, { passive: false });
+      document.addEventListener('touchmove', handleTouchMove, touchMoveOptions);
       document.addEventListener('touchend', handleTouchEnd);
       
       return () => {
@@ -114,7 +172,16 @@ const NotificationBell = () => {
         document.removeEventListener('touchend', handleTouchEnd);
       };
     }
-  }, [isDragging]);
+  }, [isDragging, dragStartPos]);
+  
+  // Cleanup animation frame on unmount
+  useEffect(() => {
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, []);
 
   const getPriorityColor = (priority) => {
     switch (priority?.toLowerCase()) {
@@ -241,36 +308,33 @@ const NotificationBell = () => {
             onTouchStart={handleTouchStart}
             className={`fixed z-[1000] w-[400px] max-w-[90vw] max-h-[500px] 
               bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden
-              transition-all duration-300 ease-out
-              ${isDragging ? 'cursor-grabbing scale-105 shadow-3xl' : 'cursor-default'}`}
+              transition-shadow duration-200 ease-out
+              ${isDragging ? 'cursor-grabbing shadow-3xl' : 'cursor-default'}`}
             style={{
               left: `${position.x}px`,
               top: `${position.y}px`,
-              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.1)',
+              boxShadow: isDragging 
+                ? '0 25px 80px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.15)' 
+                : '0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.1)',
               touchAction: 'none',
-              animation: 'slideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+              animation: 'slideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              willChange: isDragging ? 'transform' : 'auto',
+              transform: isDragging ? 'scale(1.02)' : 'scale(1)',
+              transition: isDragging ? 'box-shadow 0.2s ease-out, transform 0.15s ease-out' : 'box-shadow 0.2s ease-out, transform 0.3s ease-out'
             }}
           >
             {/* Drag Handle with Gradient Animation */}
             <div
               className="drag-handle py-3.5 px-5 flex items-center justify-center gap-2.5 
-                cursor-grab active:cursor-grabbing border-b-2 select-none min-h-[48px]
-                transition-all duration-300"
-              style={{
-                background: 'linear-gradient(135deg, #123F66, #2F6FA6)',
-                borderBottomWidth: '2px',
-                borderBottomStyle: 'solid',
-                borderBottomColor: 'rgba(93,140,207,0.22)'
-              }}
+                cursor-grab active:cursor-grabbing select-none min-h-[48px]
+                transition-all duration-300 bg-gradient-to-r from-blue-500 to-indigo-600"
             >
               <GripVertical 
                 size={20} 
-                className="opacity-80 transition-transform duration-300 hover:scale-110" 
-                style={{ color: '#DDE6ED' }} 
+                className="text-white opacity-80 transition-transform duration-300 hover:scale-110" 
               />
               <span 
-                className="text-[13px] font-medium opacity-90 tracking-wide" 
-                style={{ color: '#DDE6ED' }}
+                className="text-[13px] font-medium text-white opacity-90 tracking-wide"
               >
                 Drag to move
               </span>
@@ -278,26 +342,18 @@ const NotificationBell = () => {
 
             {/* Header */}
             <div 
-              className="flex items-center justify-between px-5 py-4 border-b border-black/10"
-              style={{ background: 'linear-gradient(135deg, #5D8CCF, #123F66)' }}
+              className="flex items-center justify-between px-5 py-4 border-b border-black/10 bg-gradient-to-r from-blue-500 to-indigo-600"
             >
-              <h3 className="m-0 text-base font-bold" style={{ color: '#DDE6ED' }}>
+              <h3 className="m-0 text-base font-bold text-white">
                 Notifications
               </h3>
               {notifications.length > 0 && (
                 <button
                   onClick={markAllAsRead}
                   className="rounded-md px-2.5 py-2 flex items-center gap-1 min-h-[32px] 
-                    transition-all duration-300 ease-out
-                    hover:scale-110 hover:rotate-12
+                    transition-all duration-300 ease-out bg-white/20 border border-white/30 text-white
+                    hover:bg-white/30 hover:scale-110 hover:rotate-12
                     active:scale-95"
-                  style={{
-                    background: 'rgba(37,99,235,0.08)',
-                    borderWidth: '1px',
-                    borderStyle: 'solid',
-                    borderColor: 'rgba(37,99,235,0.12)',
-                    color: '#1e293b'
-                  }}
                 >
                   <CheckCheck size={16} className="transition-transform duration-300" />
                 </button>
@@ -305,7 +361,7 @@ const NotificationBell = () => {
             </div>
 
             {/* Notification List */}
-            <div className="overflow-y-auto flex-1 bg-[#f8fafc] min-h-[200px]">
+            <div className="overflow-y-auto overflow-x-hidden flex-1 bg-[#f8fafc] min-h-[200px]">
               {notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-15 px-5 text-[#64748b] text-center min-h-[200px]">
                   <Bell 
