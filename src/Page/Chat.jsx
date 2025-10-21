@@ -159,10 +159,17 @@ export default function Chat({ user }) {
       }
     });
 
-    // Listen for user unblocked
+    // Listen for user unblocked - UPDATED
     socket.on('user_unblocked', (data) => {
       console.log('✅ User unblocked:', data);
       fetchBlockedUsers();
+      
+      // Refresh search if modal is open
+      if (showAddUser && emailSearch) {
+        setTimeout(() => {
+          searchUserByEmail();
+        }, 300);
+      }
     });
 
     // Listen for being blocked by someone
@@ -171,6 +178,19 @@ export default function Chat({ user }) {
       fetchBlockedByOthers();
       if (showAddUser && emailSearch) {
         searchUserByEmail();
+      }
+    });
+
+    // Listen for being unblocked by someone - NEW
+    socket.on('you_were_unblocked', (data) => {
+      console.log('✅ You were unblocked by:', data.unblockedBy);
+      fetchBlockedByOthers();
+      
+      // Refresh search if modal is open
+      if (showAddUser && emailSearch) {
+        setTimeout(() => {
+          searchUserByEmail();
+        }, 300);
       }
     });
 
@@ -212,6 +232,7 @@ export default function Chat({ user }) {
       socket.off('user_blocked');
       socket.off('user_unblocked');
       socket.off('you_were_blocked');
+      socket.off('you_were_unblocked');
       socket.off('contact_removed');
       socket.off('waiting_message_removed');
     };
@@ -506,8 +527,7 @@ export default function Chat({ user }) {
         if (response.ok) {
           const data = await response.json();
           await fetchSentRequests();
-          
-          if (socket && isConnected) {
+        if (socket && isConnected) {
             socket.emit('contact_request_sent', { 
               receiverId: userId,
               requestId: data.id 
@@ -598,6 +618,7 @@ export default function Chat({ user }) {
     if (window.confirm('Unblock this user?')) {
       socket.emit('unblock_user', { blockedUserId: userId });
       
+      // Refresh search if modal is open
       if (showAddUser && emailSearch) {
         setTimeout(() => {
           searchUserByEmail();
@@ -1225,6 +1246,7 @@ export default function Chat({ user }) {
               ) : (
                 waitingMessages.map((msg, index) => {
                   const msgUser = allUsers.find(u => u.id == msg.userId);
+                  const isBlockedByThem = blockedByOthers.includes(msg.userId);
                   
                   return (
                     <div 
@@ -1242,14 +1264,20 @@ export default function Chat({ user }) {
                           ) : (
                             <User size={24} />
                           )}
-                          <div className="absolute inset-0 bg-orange-400/20 animate-ping rounded-full" />
+                          {isBlockedByThem ? (
+                            <div className="absolute inset-0 bg-red-500/70 flex items-center justify-center">
+                              <ShieldOff size={20} className="text-white" />
+                            </div>
+                          ) : (
+                            <div className="absolute inset-0 bg-orange-400/20 animate-ping rounded-full" />
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-center mb-1.5">
                             <div className="font-semibold text-slate-800">
                               {msgUser.name} <span className="text-gray-400 font-normal text-xs">({msgUser.email})</span>
                             </div>
-                            {msg.unreadCount > 0 && (
+                            {msg.unreadCount > 0 && !isBlockedByThem && (
                               <span className="bg-orange-600 text-white text-[11px] font-bold py-0.5 px-1.5 rounded-xl min-w-[18px] h-[18px] flex items-center justify-center shadow-md animate-bounce">
                                 {msg.unreadCount}
                               </span>
@@ -1261,9 +1289,16 @@ export default function Chat({ user }) {
                           <div className="text-[11px] text-slate-400">
                             {formatTime(msg.timestamp)}
                           </div>
-                          <div className="text-[11px] text-orange-600 italic mt-1">
-                            Click to view • Can't reply (not a contact)
-                          </div>
+                          {isBlockedByThem ? (
+                            <div className="text-[11px] text-red-600 font-bold italic mt-1 flex items-center gap-1">
+                              <ShieldOff size={12} />
+                              This user has blocked you
+                            </div>
+                          ) : (
+                            <div className="text-[11px] text-orange-600 italic mt-1">
+                              Click to view • Can't reply (not a contact)
+                            </div>
+                          )}
                         </div>
                       </div>
                       <button
@@ -1343,7 +1378,6 @@ export default function Chat({ user }) {
                   ) : (
                     <User size={24} />
                   )}
-                  {/* Online Status Indicator in Chat Header */}
                   {onlineUsers.includes(selectedUser.id) ? (
                     <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full z-20" />
                   ) : (
@@ -1380,98 +1414,113 @@ export default function Chat({ user }) {
                       </p>
                     </div>
                   </div>
+                ) : blockedByOthers.includes(selectedUser.id) ? (
+                  <div className="flex flex-col items-center justify-center h-full">
+                    <div className="bg-orange-50 border-2 border-orange-200 rounded-xl p-8 max-w-md text-center shadow-lg">
+                      <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <ShieldOff size={32} className="text-orange-600" />
+                      </div>
+                      <h3 className="text-xl font-bold text-orange-600 mb-2">User Has Blocked You</h3>
+                      <p className="text-slate-700 mb-4">
+                        <strong>{selectedUser.name}</strong> has blocked you. You cannot send or receive messages from this user.
+                      </p>
+                      <p className="text-sm text-slate-500">
+                        You can view previous messages, but you cannot reply or send new messages.
+                      </p>
+                    </div>
+                  </div>
                 ) : (
                   messages.map((msg, index) => (
-                  <div
+                    <div
                       key={msg.id}
                       className={`flex flex-col mb-4 max-w-[100%] group ${msg.sender_id === user.id ? 'self-end items-end' : 'self-start items-start'}`}
                       style={{ 
                         animation: `${msg.sender_id === user.id ? 'slideInRight' : 'slideInLeft'} 0.3s ease-out ${index * 0.02}s backwards` 
                       }}
                     >
-                    {editingMessageId === msg.id ? (
-                      <div className="w-full" style={{ animation: 'scaleIn 0.2s ease-out' }}>
-                        <textarea
-                          value={editingText}
-                          onChange={(e) => {
-                            setEditingText(e.target.value);
-                            e.target.style.height = 'auto';
-                            e.target.style.height = Math.min(e.target.scrollHeight, 400) + 'px';
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                              e.preventDefault();
-                              saveEditedMessage(msg.id);
-                            }
-                            if (e.key === 'Escape') {
-                              cancelEditing();
-                            }
-                          }}
-                          ref={(el) => {
-                            if (el) {
-                              el.style.height = 'auto';
-                              el.style.height = Math.min(el.scrollHeight, 400) + 'px';
-                            }
-                          }}
-                          autoFocus
-                          className="w-full p-3 rounded-xl border-2 border-blue-500 text-sm resize-none min-h-[80px] max-h-[400px] overflow-y-auto focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-300 focus:shadow-lg"
-                        />
-                        <div className="flex gap-2 mt-2">
-                          <button
-                            onClick={() => saveEditedMessage(msg.id)}
-                            className="px-4 py-1.5 bg-gradient-to-br from-blue-600 to-indigo-700 text-white border-none rounded-md text-xs font-semibold cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95"
-                          >
-                            Save
-                          </button>
-                          <button
-                            onClick={cancelEditing}
-                            className="px-4 py-1.5 bg-gray-200 text-slate-500 border-none rounded-md text-xs font-semibold cursor-pointer transition-all duration-300 hover:bg-gray-300 hover:scale-105 active:scale-95"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <div className={`py-3 px-4 rounded-xl break-words transition-all duration-300 hover:scale-[1.02] ${msg.sender_id === user.id ? 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-br-sm hover:shadow-lg' : 'bg-white text-slate-800 border border-blue-200 rounded-bl-sm hover:bg-blue-50 hover:shadow-md'}`}>
-                          {msg.deleted ? (
-                            <i className="text-gray-400 italic">
-                              This message has been deleted
-                            </i>
-                          ) : (
-                            msg.message
-                          )}
-                        </div>
-                        <div className="text-[11px] text-slate-500 mt-1">
-                          {msg.edited === 1 && !msg.deleted && (
-                            <span className="text-[11px] text-slate-400 mr-1">
-                              (edited)
-                            </span>
-                          )}
-                          {formatTime(msg.timestamp)}
-                        </div>
-
-                        {msg.sender_id === user.id && !msg.deleted && (
-                          <div className="flex gap-1.5 mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      {editingMessageId === msg.id ? (
+                        <div className="w-full" style={{ animation: 'scaleIn 0.2s ease-out' }}>
+                          <textarea
+                            value={editingText}
+                            onChange={(e) => {
+                              setEditingText(e.target.value);
+                              e.target.style.height = 'auto';
+                              e.target.style.height = Math.min(e.target.scrollHeight, 400) + 'px';
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                saveEditedMessage(msg.id);
+                              }
+                              if (e.key === 'Escape') {
+                                cancelEditing();
+                              }
+                            }}
+                            ref={(el) => {
+                              if (el) {
+                                el.style.height = 'auto';
+                                el.style.height = Math.min(el.scrollHeight, 400) + 'px';
+                              }
+                            }}
+                            autoFocus
+                            className="w-full p-3 rounded-xl border-2 border-blue-500 text-sm resize-none min-h-[80px] max-h-[400px] overflow-y-auto focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-300 focus:shadow-lg"
+                          />
+                          <div className="flex gap-2 mt-2">
                             <button
-                              className="bg-blue-50 border border-blue-200 cursor-pointer text-blue-600 py-1 px-2 rounded-md transition-all duration-300 hover:bg-blue-100 hover:text-blue-700 hover:scale-110 active:scale-95 flex items-center gap-1"
-                              onClick={() => startEditingMessage(msg)}
-                              title="Edit message"
+                              onClick={() => saveEditedMessage(msg.id)}
+                              className="px-4 py-1.5 bg-gradient-to-br from-blue-600 to-indigo-700 text-white border-none rounded-md text-xs font-semibold cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg active:scale-95"
                             >
-                              <Edit2 size={14} />
+                              Save
                             </button>
                             <button
-                              className="bg-red-50 border border-red-200 cursor-pointer text-red-600 py-1 px-2 rounded-md transition-all duration-300 hover:bg-red-100 hover:text-red-700 hover:scale-110 active:scale-95 flex items-center gap-1"
-                              onClick={() => handleDeleteMessage(msg.id)}
-                              title="Delete message"
+                              onClick={cancelEditing}
+                              className="px-4 py-1.5 bg-gray-200 text-slate-500 border-none rounded-md text-xs font-semibold cursor-pointer transition-all duration-300 hover:bg-gray-300 hover:scale-105 active:scale-95"
                             >
-                              <Trash2 size={14} />
+                              Cancel
                             </button>
                           </div>
-                        )}
-                      </>
-                    )}
-                  </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className={`py-3 px-4 rounded-xl break-words transition-all duration-300 hover:scale-[1.02] ${msg.sender_id === user.id ? 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-br-sm hover:shadow-lg' : 'bg-white text-slate-800 border border-blue-200 rounded-bl-sm hover:bg-blue-50 hover:shadow-md'}`}>
+                            {msg.deleted ? (
+                              <i className="text-gray-400 italic">
+                                This message has been deleted
+                              </i>
+                            ) : (
+                              msg.message
+                            )}
+                          </div>
+                          <div className="text-[11px] text-slate-500 mt-1">
+                            {msg.edited === 1 && !msg.deleted && (
+                              <span className="text-[11px] text-slate-400 mr-1">
+                                (edited)
+                              </span>
+                            )}
+                            {formatTime(msg.timestamp)}
+                          </div>
+
+                          {msg.sender_id === user.id && !msg.deleted && (
+                            <div className="flex gap-1.5 mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                              <button
+                                className="bg-blue-50 border border-blue-200 cursor-pointer text-blue-600 py-1 px-2 rounded-md transition-all duration-300 hover:bg-blue-100 hover:text-blue-700 hover:scale-110 active:scale-95 flex items-center gap-1"
+                                onClick={() => startEditingMessage(msg)}
+                                title="Edit message"
+                              >
+                                <Edit2 size={14} />
+                              </button>
+                              <button
+                                className="bg-red-50 border border-red-200 cursor-pointer text-red-600 py-1 px-2 rounded-md transition-all duration-300 hover:bg-red-100 hover:text-red-700 hover:scale-110 active:scale-95 flex items-center gap-1"
+                                onClick={() => handleDeleteMessage(msg.id)}
+                                title="Delete message"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
                   ))
                 )}
                 <div ref={messagesEndRef} />
@@ -1489,14 +1538,22 @@ export default function Chat({ user }) {
                       sendMessage();
                     }
                   }}
-                  placeholder={selectedUser.isDeleted ? "User has been deleted..." : selectedUser.isRequest ? "Accept request to reply..." : "Type a message..."}
+                  placeholder={
+                    selectedUser.isDeleted 
+                      ? "User has been deleted..." 
+                      : blockedByOthers.includes(selectedUser.id)
+                      ? "This user has blocked you..."
+                      : selectedUser.isRequest 
+                      ? "Accept request to reply..." 
+                      : "Type a message..."
+                  }
                   className="flex-1 py-3 px-4 border-2 border-gray-200 rounded-3xl text-sm outline-none transition-all duration-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:px-5 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={selectedUser.isRequest || selectedUser.isDeleted}
+                  disabled={selectedUser.isRequest || selectedUser.isDeleted || blockedByOthers.includes(selectedUser.id)}
                 />
                 <button 
                   onClick={() => sendMessage()} 
                   className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 text-white border-none cursor-pointer flex items-center justify-center transition-all duration-300 hover:bg-blue-600 hover:scale-110 hover:shadow-xl hover:rotate-12 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group"
-                  disabled={selectedUser.isRequest || selectedUser.isDeleted}
+                  disabled={selectedUser.isRequest || selectedUser.isDeleted || blockedByOthers.includes(selectedUser.id)}
                 >
                   <Send size={20} className="relative z-10 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                   <span className="absolute inset-0 bg-white/20 rounded-full transition-transform duration-300 scale-0 group-hover:scale-100" style={{ animation: 'ripple 0.6s ease-out' }} />
@@ -1548,10 +1605,8 @@ export default function Chat({ user }) {
               <div className="flex gap-3 w-full mt-4">
                 <button
                   onClick={() => {
-                    // Accept - keep in waiting tab, allow viewing
                     setShowWarningModal(false);
                     setPendingMessageUser(null);
-                    // User can now view messages in waiting tab
                   }}
                   className="flex-1 py-3 px-6 bg-gradient-to-br from-blue-600 to-indigo-700 text-white border-none rounded-xl text-base font-semibold cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl active:scale-95"
                 >
@@ -1559,7 +1614,6 @@ export default function Chat({ user }) {
                 </button>
                 <button
                   onClick={() => {
-                    // Block user
                     blockUser(pendingMessageUser.id);
                     setShowWarningModal(false);
                     setPendingMessageUser(null);

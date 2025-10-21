@@ -1,4 +1,3 @@
-// server.js - Updated with JWT Authentication, Progress Storage, Profile Image Upload, and Chat
 import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
@@ -1047,136 +1046,47 @@ app.delete('/notifications', verifyToken, (req, res) => {
   );
 });
 
-// ==================== CHAT/MESSAGE ROUTES ====================
+// ==================== CHAT/MESSAGE REST API (Minimal - Fallback Only) ====================
 
-app.get('/messages', verifyToken, (req, res) => {
+app.get('/blocked-users', verifyToken, (req, res) => {
   const userId = req.user.id;
-  
   db.all(
-    `SELECT m.*, 
-     datetime(m.timestamp) as formatted_timestamp,
-     u1.name as sender_name, u1.profile_image as sender_image,
-     u2.name as receiver_name, u2.profile_image as receiver_image
-     FROM messages m
-     LEFT JOIN users u1 ON m.sender_id = u1.id
-     LEFT JOIN users u2 ON m.receiver_id = u2.id
-     WHERE m.sender_id = ? OR m.receiver_id = ? OR m.receiver_id IS NULL
-     ORDER BY m.timestamp DESC`,
-    [userId, userId],
-    (err, rows) => {
-      if (err) {
-        console.error('Error fetching messages:', err);
-        return res.status(500).json({ error: 'Database error' });
-      }
-      
-      const messages = rows.map(row => ({
-        ...row,
-        timestamp: row.formatted_timestamp ? row.formatted_timestamp + 'Z' : row.timestamp
-      }));
-      
-      res.json(messages);
-    }
-  );
-});
-
-app.get('/messages/conversation/:otherUserId', verifyToken, (req, res) => {
-  const userId = req.user.id;
-  const otherUserId = req.params.otherUserId;
-  
-  db.all(
-    `SELECT m.*, 
-     datetime(m.timestamp) as formatted_timestamp,
-     u1.name as sender_name, u1.profile_image as sender_image,
-     u2.name as receiver_name, u2.profile_image as receiver_image
-     FROM messages m
-     LEFT JOIN users u1 ON m.sender_id = u1.id
-     LEFT JOIN users u2 ON m.receiver_id = u2.id
-     WHERE (m.sender_id = ? AND m.receiver_id = ?) 
-        OR (m.sender_id = ? AND m.receiver_id = ?)
-     ORDER BY m.timestamp ASC`,
-    [userId, otherUserId, otherUserId, userId],
-    (err, rows) => {
-      if (err) {
-        console.error('Error fetching conversation:', err);
-        return res.status(500).json({ error: 'Database error' });
-      }
-      
-      const messages = rows.map(row => ({
-        ...row,
-        timestamp: row.formatted_timestamp ? row.formatted_timestamp + 'Z' : row.timestamp
-      }));
-      
-      res.json(messages);
-    }
-  );
-});
-
-app.delete('/messages/:id', verifyToken, (req, res) => {
-  const messageId = req.params.id;
-  const userId = req.user.id;
-  
-  if (req.user.userType === 'admin') {
-    db.run('DELETE FROM messages WHERE id = ?', [messageId], function(err) {
-      if (err) {
-        console.error('Error deleting message:', err);
-        return res.status(500).json({ error: 'Database error' });
-      }
-      if (this.changes === 0) {
-        return res.status(404).json({ error: 'Message not found' });
-      }
-      res.json({ message: 'Message deleted permanently' });
-    });
-  } else {
-    db.run(
-      'DELETE FROM messages WHERE id = ? AND sender_id = ?',
-      [messageId, userId],
-      function(err) {
-        if (err) {
-          console.error('Error deleting message:', err);
-          return res.status(500).json({ error: 'Database error' });
-        }
-        if (this.changes === 0) {
-          return res.status(404).json({ error: 'Message not found or unauthorized' });
-        }
-        res.json({ message: 'Message deleted permanently' });
-      }
-    );
-  }
-});
-
-app.get('/messages/unread/count', verifyToken, (req, res) => {
-  const userId = req.user.id;
-  
-  db.get(
-    'SELECT COUNT(*) as count FROM messages WHERE receiver_id = ? AND read = 0',
+    `SELECT u.id, u.name, u.email, u.profile_image, u.userType, b.blocked_at
+     FROM blocked_users b
+     JOIN users u ON b.blocked_user_id = u.id
+     WHERE b.user_id = ?
+     ORDER BY b.blocked_at DESC`,
     [userId],
-    (err, row) => {
-      if (err) {
-        console.error('Error fetching unread count:', err);
-        return res.status(500).json({ error: 'Database error' });
-      }
-      res.json({ unreadCount: row.count });
-    }
-  );
-});
-
-app.get('/users/search', verifyToken, (req, res) => {
-  const currentUserId = req.user.id;
-  
-  db.all(
-    'SELECT id, name, email, userType, profile_image FROM users WHERE id != ?',
-    [currentUserId],
     (err, rows) => {
       if (err) {
-        console.error('Database error fetching users for search:', err);
-        return res.status(500).json({ error: 'Database error' });
+        console.error('Error fetching blocked users:', err);
+        return res.status(500).json({ error: 'Failed to fetch blocked users' });
       }
-      res.json(rows);
+      res.json(rows || []);
     }
   );
 });
 
-// ==================== CONTACT REQUESTS API ====================
+app.get('/blocked-by-others', verifyToken, (req, res) => {
+  const userId = req.user.id;
+  db.all(
+    `SELECT u.id, u.name, u.email, u.profile_image, u.userType, b.blocked_at
+     FROM blocked_users b
+     JOIN users u ON b.user_id = u.id
+     WHERE b.blocked_user_id = ?
+     ORDER BY b.blocked_at DESC`,
+    [userId],
+    (err, rows) => {
+      if (err) {
+        console.error('Error fetching users who blocked current user:', err);
+        return res.status(500).json({ error: 'Failed to fetch users who blocked you' });
+      }
+      res.json(rows || []);
+    }
+  );
+});
+
+// ==================== CONTACT REQUESTS REST API ====================
 
 app.post('/contact-requests', verifyToken, (req, res) => {
   const senderId = req.user.id;
@@ -1256,99 +1166,6 @@ app.post('/contact-requests', verifyToken, (req, res) => {
   });
 });
 
-app.get('/contact-requests', verifyToken, (req, res) => {
-  const userId = req.user.id;
-  const { status } = req.query;
-
-  let query = `
-    SELECT cr.*, 
-           u.name as sender_name, 
-           u.email as sender_email, 
-           u.profile_image as sender_image,
-           datetime(cr.created_at) as formatted_created_at
-    FROM contact_requests cr
-    JOIN users u ON cr.sender_id = u.id
-    WHERE cr.receiver_id = ?
-  `;
-  const params = [userId];
-
-  if (status) {
-    query += ' AND cr.status = ?';
-    params.push(status);
-  }
-
-  query += ' ORDER BY cr.created_at DESC';
-
-  db.all(query, params, (err, rows) => {
-    if (err) {
-      console.error('Error fetching contact requests:', err);
-      return res.status(500).json({ error: 'Database error' });
-    }
-
-    const requests = rows.map(row => ({
-      ...row,
-      created_at: row.formatted_created_at ? row.formatted_created_at + 'Z' : row.created_at
-    }));
-
-    res.json(requests);
-  });
-});
-
-app.get('/contact-requests/sent', verifyToken, (req, res) => {
-  const userId = req.user.id;
-
-  db.all(
-    `SELECT cr.*, 
-            u.name as receiver_name, 
-            u.email as receiver_email, 
-            u.profile_image as receiver_image,
-            datetime(cr.created_at) as formatted_created_at
-     FROM contact_requests cr
-     JOIN users u ON cr.receiver_id = u.id
-     WHERE cr.sender_id = ?
-     ORDER BY cr.created_at DESC`,
-    [userId],
-    (err, rows) => {
-      if (err) {
-        console.error('Error fetching sent contact requests:', err);
-        return res.status(500).json({ error: 'Database error' });
-      }
-
-      const requests = rows.map(row => ({
-        ...row,
-        created_at: row.formatted_created_at ? row.formatted_created_at + 'Z' : row.created_at
-      }));
-
-      res.json(requests);
-    }
-  );
-});
-
-app.get('/contact-requests/removed', verifyToken, (req, res) => {
-  const userId = req.user.id;
-
-  db.all(
-    `SELECT DISTINCT 
-       CASE 
-         WHEN sender_id = ? THEN receiver_id 
-         ELSE sender_id 
-       END as user_id
-     FROM contact_requests
-     WHERE status = 'removed'
-     AND (sender_id = ? OR receiver_id = ?)`,
-    [userId, userId, userId],
-    (err, rows) => {
-      if (err) {
-        console.error('Error fetching removed contacts:', err);
-        return res.status(500).json({ error: 'Database error' });
-      }
-
-      const removedUserIds = rows.map(row => row.user_id);
-      res.json(removedUserIds);
-    }
-  );
-});
-
 app.patch('/contact-requests/:id', verifyToken, (req, res) => {
   const requestId = req.params.id;
   const userId = req.user.id;
@@ -1387,41 +1204,28 @@ app.patch('/contact-requests/:id', verifyToken, (req, res) => {
           if (status === 'accepted') {
             console.log(`📬 Contact request accepted: User ${userId} accepted request from User ${request.sender_id}`);
             
-            // Notify BOTH users via Socket.IO
             const senderSocketId = onlineUsers.get(request.sender_id);
             const accepterSocketId = onlineUsers.get(userId);
             
-            console.log(`🔍 Sender (User ${request.sender_id}) socket ID:`, senderSocketId);
-            console.log(`🔍 Accepter (User ${userId}) socket ID:`, accepterSocketId);
-            
-            // Notify the sender (who sent the request)
             if (senderSocketId) {
               io.to(senderSocketId).emit('contact_request_approved', {
                 approvedBy: userId,
                 receiverId: request.sender_id,
                 timestamp: new Date().toISOString()
               });
-              console.log(`✅ Emitted contact_request_approved to sender (User ${request.sender_id})`);
-            } else {
-              console.log(`⚠️ Sender (User ${request.sender_id}) is offline`);
             }
             
-            // Notify the accepter (who accepted the request)
             if (accepterSocketId) {
               io.to(accepterSocketId).emit('contact_request_approved', {
                 approvedBy: userId,
                 receiverId: request.sender_id,
                 timestamp: new Date().toISOString()
               });
-              console.log(`✅ Emitted contact_request_approved to accepter (User ${userId})`);
-            } else {
-              console.log(`⚠️ Accepter (User ${userId}) is offline`);
             }
           } else if (status === 'declined') {
             console.log(`📪 Contact request declined: User ${userId} declined request from User ${request.sender_id}`);
             
             const senderSocketId = onlineUsers.get(request.sender_id);
-            console.log(`🔍 Sender (User ${request.sender_id}) socket ID:`, senderSocketId);
             if (senderSocketId) {
               io.to(senderSocketId).emit('contact_request_declined_confirmed', {
                 requestId: requestId,
@@ -1429,9 +1233,6 @@ app.patch('/contact-requests/:id', verifyToken, (req, res) => {
                 senderId: request.sender_id,
                 timestamp: new Date().toISOString()
               });
-              console.log(`✅ Emitted contact_request_declined_confirmed to sender (User ${request.sender_id})`);
-            } else {
-              console.log(`⚠️ Sender (User ${request.sender_id}) is offline`);
             }
           }
 
@@ -1443,53 +1244,6 @@ app.patch('/contact-requests/:id', verifyToken, (req, res) => {
           });
         }
       );
-    }
-  );
-});
-
-app.delete('/contact-requests/:id', verifyToken, (req, res) => {
-  const requestId = req.params.id;
-  const userId = req.user.id;
-
-  db.run(
-    'DELETE FROM contact_requests WHERE id = ? AND (sender_id = ? OR receiver_id = ?)',
-    [requestId, userId, userId],
-    function(err) {
-      if (err) {
-        console.error('Error deleting contact request:', err);
-        return res.status(500).json({ error: 'Database error' });
-      }
-
-      if (this.changes === 0) {
-        return res.status(404).json({ error: 'Contact request not found or unauthorized' });
-      }
-
-      res.json({ message: 'Contact request deleted successfully' });
-    }
-  );
-});
-
-app.get('/contacts', verifyToken, (req, res) => {
-  const userId = req.user.id;
-
-  db.all(
-    `SELECT DISTINCT u.id, u.name, u.email, u.profile_image, u.userType
-     FROM users u
-     WHERE u.id IN (
-       SELECT sender_id FROM contact_requests 
-       WHERE receiver_id = ? AND status = 'accepted'
-       UNION
-       SELECT receiver_id FROM contact_requests 
-       WHERE sender_id = ? AND status = 'accepted'
-     )
-     ORDER BY u.name`,
-    [userId, userId],
-    (err, rows) => {
-      if (err) {
-        console.error('Error fetching contacts:', err);
-        return res.status(500).json({ error: 'Database error' });
-      }
-      res.json(rows);
     }
   );
 });
@@ -1517,15 +1271,11 @@ app.delete('/contacts/:contactId', verifyToken, (req, res) => {
       console.log(`👋 Contact removed: User ${userId} removed User ${contactId}`);
 
       const contactSocketId = onlineUsers.get(contactId);
-      console.log(`🔍 Removed user (User ${contactId}) socket ID:`, contactSocketId);
       if (contactSocketId) {
         io.to(contactSocketId).emit('contact_removed', {
           removedBy: userId,
           timestamp: new Date().toISOString()
         });
-        console.log(`✅ Emitted contact_removed to User ${contactId}`);
-      } else {
-        console.log(`⚠️ Removed user (User ${contactId}) is offline`);
       }
 
       res.json({ 
@@ -1536,70 +1286,13 @@ app.delete('/contacts/:contactId', verifyToken, (req, res) => {
   );
 });
 
-app.get('/blocked-users', verifyToken, (req, res) => {
-  const userId = req.user.id;
-  db.all(
-    `SELECT u.id, u.name, u.email, u.profile_image, u.userType, b.blocked_at
-     FROM blocked_users b
-     JOIN users u ON b.blocked_user_id = u.id
-     WHERE b.user_id = ?
-     ORDER BY b.blocked_at DESC`,
-    [userId],
-    (err, rows) => {
-      if (err) {
-        console.error('Error fetching blocked users:', err);
-        return res.status(500).json({ error: 'Failed to fetch blocked users' });
-      }
-      res.json(rows || []);
-    }
-  );
-});
-
-app.get('/blocked-by-others', verifyToken, (req, res) => {
-  const userId = req.user.id;
-  db.all(
-    `SELECT u.id, u.name, u.email, u.profile_image, u.userType, b.blocked_at
-     FROM blocked_users b
-     JOIN users u ON b.user_id = u.id
-     WHERE b.blocked_user_id = ?
-     ORDER BY b.blocked_at DESC`,
-    [userId],
-    (err, rows) => {
-      if (err) {
-        console.error('Error fetching users who blocked current user:', err);
-        return res.status(500).json({ error: 'Failed to fetch users who blocked you' });
-      }
-      res.json(rows || []);
-    }
-  );
-});
-
-app.get('/is-blocked/:userId', verifyToken, (req, res) => {
-  const currentUserId = req.user.id;
-  const targetUserId = parseInt(req.params.userId);
-  
-  db.get(
-    `SELECT 1 FROM blocked_users 
-     WHERE (user_id = ? AND blocked_user_id = ?) 
-        OR (user_id = ? AND blocked_user_id = ?)`,
-    [currentUserId, targetUserId, targetUserId, currentUserId],
-    (err, row) => {
-      if (err) {
-        console.error('Error checking block status:', err);
-        return res.status(500).json({ error: 'Failed to check block status' });
-      }
-      res.json({ isBlocked: !!row });
-    }
-  );
-});
-
 // ==================== SOCKET.IO REAL-TIME MESSAGING ====================
 
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
   
   if (!token) {
-    return next(new Error('Authentication error: Token required' ));
+    return next(new Error('Authentication error: Token required'));
   }
 
   jwt.verify(token, JWT_SECRET, (err, decoded) => {
@@ -1620,19 +1313,18 @@ io.on('connection', (socket) => {
   console.log(`📊 Online users: ${Array.from(onlineUsers.keys()).join(', ')}`);
   
   io.emit('user_online', { userId, socketId: socket.id });
-  
   socket.emit('online_users', Array.from(onlineUsers.keys()));
-
   socket.join(`user_${userId}`);
 
-  // Handle get_all_users (Socket.IO version of /users/search)
+  // ==================== USER & CONTACT MANAGEMENT ====================
+
   socket.on('get_all_users', () => {
     db.all(
       'SELECT id, name, email, userType, profile_image FROM users WHERE id != ?',
       [userId],
       (err, rows) => {
         if (err) {
-          console.error('Database error fetching users for get_all_users:', err);
+          console.error('❌ Error fetching all users:', err);
           socket.emit('all_users', { error: 'Database error', users: [] });
         } else {
           socket.emit('all_users', { users: rows });
@@ -1641,7 +1333,6 @@ io.on('connection', (socket) => {
     );
   });
 
-  // Handle get_contacts (Socket.IO version of /contacts)
   socket.on('get_contacts', () => {
     db.all(
       `SELECT DISTINCT u.id, u.name, u.email, u.profile_image, u.userType
@@ -1657,7 +1348,7 @@ io.on('connection', (socket) => {
       [userId, userId],
       (err, rows) => {
         if (err) {
-          console.error('Database error fetching contacts for get_contacts:', err);
+          console.error('❌ Error fetching contacts:', err);
           socket.emit('contacts', { error: 'Database error', contacts: [] });
         } else {
           socket.emit('contacts', { contacts: rows });
@@ -1666,10 +1357,258 @@ io.on('connection', (socket) => {
     );
   });
 
-  // Handle get_waiting_messages (Socket.IO version of waiting tab logic)
+  socket.on('get_sent_requests', () => {
+    db.all(
+      `SELECT cr.*, 
+              u.name as receiver_name, 
+              u.email as receiver_email, 
+              u.profile_image as receiver_image,
+              datetime(cr.created_at) as formatted_created_at
+       FROM contact_requests cr
+       JOIN users u ON cr.receiver_id = u.id
+       WHERE cr.sender_id = ?
+       ORDER BY cr.created_at DESC`,
+      [userId],
+      (err, rows) => {
+        if (err) {
+          console.error('❌ Error fetching sent requests:', err);
+          socket.emit('sent_requests', { error: 'Database error', sentRequests: [] });
+        } else {
+          socket.emit('sent_requests', { sentRequests: rows });
+        }
+      }
+    );
+  });
+
+  socket.on('get_contact_requests', () => {
+    db.all(
+      `SELECT cr.*, 
+              u.name as sender_name, 
+              u.email as sender_email, 
+              u.profile_image as sender_image,
+              datetime(cr.created_at) as formatted_created_at
+       FROM contact_requests cr
+       JOIN users u ON cr.sender_id = u.id
+       WHERE cr.receiver_id = ? AND cr.status = 'pending'
+       ORDER BY cr.created_at DESC`,
+      [userId],
+      (err, rows) => {
+        if (err) {
+          console.error('❌ Error fetching contact requests:', err);
+          socket.emit('contact_requests', { error: 'Database error', contactRequests: [] });
+        } else {
+          const requests = rows.map(row => ({
+            ...row,
+            created_at: row.formatted_created_at ? row.formatted_created_at + 'Z' : row.created_at
+          }));
+          socket.emit('contact_requests', { contactRequests: requests });
+        }
+      }
+    );
+  });
+
+  // ==================== BLOCKING SYSTEM ====================
+
+  socket.on('get_blocked_users', () => {
+    db.all(
+      `SELECT u.id, u.name, u.email, u.profile_image, u.userType, b.blocked_at
+       FROM blocked_users b
+       JOIN users u ON b.blocked_user_id = u.id
+       WHERE b.user_id = ?
+       ORDER BY b.blocked_at DESC`,
+      [userId],
+      (err, rows) => {
+        if (err) {
+          console.error('❌ Error fetching blocked users:', err);
+          socket.emit('blocked_users', { error: 'Database error', blockedUsers: [] });
+        } else {
+          socket.emit('blocked_users', { blockedUsers: rows || [] });
+        }
+      }
+    );
+  });
+
+  socket.on('block_user', async (data) => {
+    const { blockedUserId } = data;
+    
+    try {
+      await new Promise((resolve, reject) => {
+        db.run(
+          'INSERT INTO blocked_users (user_id, blocked_user_id) VALUES (?, ?)',
+          [userId, blockedUserId],
+          function(err) {
+            if (err) reject(err);
+            else resolve(this.lastID);
+          }
+        );
+      });
+
+      const blockedUser = await new Promise((resolve, reject) => {
+        db.get('SELECT id, name, email, profile_image FROM users WHERE id = ?', [blockedUserId], (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        });
+      });
+
+      socket.emit('user_blocked', { 
+        blockedUser,
+        message: 'User blocked successfully'
+      });
+
+      const blockedUserSocketId = onlineUsers.get(blockedUserId);
+      if (blockedUserSocketId) {
+        io.to(blockedUserSocketId).emit('you_were_blocked', {
+          blockedBy: userId,
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      console.log(`🚫 User ${userId} blocked user ${blockedUserId}`);
+    } catch (error) {
+      console.error('❌ Error blocking user:', error);
+      socket.emit('block_error', { error: 'Failed to block user' });
+    }
+  });
+
+  socket.on('unblock_user', async (data) => {
+    const { blockedUserId } = data;
+    
+    try {
+      await new Promise((resolve, reject) => {
+        db.run(
+          'DELETE FROM blocked_users WHERE user_id = ? AND blocked_user_id = ?',
+          [userId, blockedUserId],
+          function(err) {
+            if (err) reject(err);
+            else resolve();
+          }
+        );
+      });
+
+      const unblockedUser = await new Promise((resolve, reject) => {
+        db.get('SELECT id, name, email, profile_image FROM users WHERE id = ?', [blockedUserId], (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        });
+      });
+
+      socket.emit('user_unblocked', { 
+        blockedUserId,
+        unblockedUser,
+        message: 'User unblocked successfully'
+      });
+
+      const unblockedUserSocketId = onlineUsers.get(blockedUserId);
+      if (unblockedUserSocketId) {
+        io.to(unblockedUserSocketId).emit('you_were_unblocked', {
+          unblockedBy: userId,
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      console.log(`✅ User ${userId} unblocked user ${blockedUserId}`);
+    } catch (error) {
+      console.error('❌ Error unblocking user:', error);
+      socket.emit('unblock_error', { error: 'Failed to unblock user' });
+    }
+  });
+  // ==================== MESSAGING SYSTEM ====================
+
+  socket.on('get_messages', (otherUserId) => {
+    if (!otherUserId) {
+      socket.emit('messages', { messages: [] });
+      return;
+    }
+    db.all(
+      `SELECT m.*, 
+              datetime(m.timestamp) as formatted_timestamp,
+              u1.name as sender_name, u1.profile_image as sender_image,
+              u2.name as receiver_name, u2.profile_image as receiver_image
+       FROM messages m
+       LEFT JOIN users u1 ON m.sender_id = u1.id
+       LEFT JOIN users u2 ON m.receiver_id = u2.id
+       WHERE (m.sender_id = ? AND m.receiver_id = ?) 
+          OR (m.sender_id = ? AND m.receiver_id = ?)
+       ORDER BY m.timestamp ASC`,
+      [userId, otherUserId, otherUserId, userId],
+      (err, rows) => {
+        if (err) {
+          console.error('❌ Error fetching messages:', err);
+          socket.emit('messages', { error: 'Database error', messages: [] });
+        } else {
+          const messages = rows.map(row => ({
+            ...row,
+            timestamp: row.formatted_timestamp ? row.formatted_timestamp + 'Z' : row.timestamp
+          }));
+          socket.emit('messages', { messages });
+        }
+      }
+    );
+  });
+
+  socket.on('get_last_messages', (contactIds) => {
+    if (!contactIds || !Array.isArray(contactIds) || contactIds.length === 0) {
+      socket.emit('last_messages', { lastMessages: {}, unreadCounts: {} });
+      return;
+    }
+
+    const placeholders = contactIds.map(() => '?').join(',');
+    
+    db.all(
+      `SELECT DISTINCT 
+         CASE WHEN sender_id = ? THEN receiver_id ELSE sender_id END as contact_id,
+         message, timestamp, sender_id, receiver_id
+       FROM messages
+       WHERE (sender_id = ? OR receiver_id = ?)
+         AND (sender_id IN (${placeholders}) OR receiver_id IN (${placeholders}))
+         AND deleted = 0
+       ORDER BY timestamp DESC`,
+      [userId, userId, userId, ...contactIds, ...contactIds],
+      (err, rows) => {
+        if (err) {
+          console.error('❌ Error fetching last messages:', err);
+          socket.emit('last_messages', { lastMessages: {}, unreadCounts: {} });
+          return;
+        }
+
+        const lastMessages = {};
+        const seen = new Set();
+        
+        rows.forEach(row => {
+          const contactId = row.contact_id;
+          if (!seen.has(contactId)) {
+            lastMessages[contactId] = row;
+            seen.add(contactId);
+          }
+        });
+
+        db.all(
+          `SELECT sender_id, COUNT(*) as count
+           FROM messages
+           WHERE receiver_id = ? AND read = 0 AND sender_id IN (${placeholders}) AND deleted = 0
+           GROUP BY sender_id`,
+          [userId, ...contactIds],
+          (err, unreadRows) => {
+            if (err) {
+              console.error('❌ Error fetching unread counts:', err);
+              socket.emit('last_messages', { lastMessages, unreadCounts: {} });
+              return;
+            }
+
+            const unreadCounts = {};
+            unreadRows.forEach(row => {
+              unreadCounts[row.sender_id] = row.count;
+            });
+
+            socket.emit('last_messages', { lastMessages, unreadCounts });
+          }
+        );
+      }
+    );
+  });
+
   socket.on('get_waiting_messages', async () => {
     try {
-      // Fetch contacts
       const contacts = await new Promise((resolve, reject) => {
         db.all(
           `SELECT DISTINCT u.id FROM users u
@@ -1685,7 +1624,6 @@ io.on('connection', (socket) => {
         );
       });
 
-      // Sent requests
       const sentRequests = await new Promise((resolve, reject) => {
         db.all(
           `SELECT receiver_id FROM contact_requests WHERE sender_id = ? AND status = 'pending'`,
@@ -1694,7 +1632,6 @@ io.on('connection', (socket) => {
         );
       });
 
-      // Received requests
       const receivedRequests = await new Promise((resolve, reject) => {
         db.all(
           `SELECT sender_id FROM contact_requests WHERE receiver_id = ? AND status = 'pending'`,
@@ -1703,7 +1640,6 @@ io.on('connection', (socket) => {
         );
       });
 
-      // Blocked users
       const blockedUsers = await new Promise((resolve, reject) => {
         db.all(
           `SELECT blocked_user_id FROM blocked_users WHERE user_id = ?`,
@@ -1712,7 +1648,6 @@ io.on('connection', (socket) => {
         );
       });
 
-      // All messages
       const allMessages = await new Promise((resolve, reject) => {
         db.all(
           `SELECT m.*, u.name as sender_name, u.profile_image as sender_image
@@ -1724,9 +1659,9 @@ io.on('connection', (socket) => {
         );
       });
 
-      // Build waiting messages
       const waitingMap = new Map();
       const lastMessageByUser = new Map();
+      
       allMessages.forEach(msg => {
         if ((msg.sender_id === userId && msg.receiver_id !== userId) ||
             (msg.receiver_id === userId && msg.sender_id !== userId)) {
@@ -1737,6 +1672,7 @@ io.on('connection', (socket) => {
           }
         }
       });
+      
       allMessages.forEach(msg => {
         if (msg.receiver_id === userId &&
             msg.sender_id !== userId &&
@@ -1761,189 +1697,21 @@ io.on('connection', (socket) => {
           }
         }
       });
+      
       const validWaitingMessages = Array.from(waitingMap.values()).filter(
         msg => msg.userName !== null && msg.userName !== undefined
       );
+      
       socket.emit('waiting_messages', { waitingMessages: validWaitingMessages });
     } catch (error) {
-      console.error('Error fetching waiting messages (Socket.IO):', error);
+      console.error('❌ Error fetching waiting messages:', error);
       socket.emit('waiting_messages', { waitingMessages: [] });
     }
   });
 
-  // Handle get_messages (Socket.IO version of /messages/conversation/:otherUserId)
-  socket.on('get_messages', (otherUserId) => {
-    if (!otherUserId) {
-      socket.emit('messages', { messages: [] });
-      return;
-    }
-    db.all(
-      `SELECT m.*, 
-              datetime(m.timestamp) as formatted_timestamp,
-              u1.name as sender_name, u1.profile_image as sender_image,
-              u2.name as receiver_name, u2.profile_image as receiver_image
-       FROM messages m
-       LEFT JOIN users u1 ON m.sender_id = u1.id
-       LEFT JOIN users u2 ON m.receiver_id = u2.id
-       WHERE (m.sender_id = ? AND m.receiver_id = ?) 
-          OR (m.sender_id = ? AND m.receiver_id = ?)
-       ORDER BY m.timestamp ASC`,
-      [userId, otherUserId, otherUserId, userId],
-      (err, rows) => {
-        if (err) {
-          console.error('Database error fetching messages for get_messages:', err);
-          socket.emit('messages', { error: 'Database error', messages: [] });
-        } else {
-          const messages = rows.map(row => ({
-            ...row,
-            timestamp: row.formatted_timestamp ? row.formatted_timestamp + 'Z' : row.timestamp
-          }));
-          socket.emit('messages', { messages });
-        }
-      }
-    );
-  });
-
-  // Handle get_sent_requests (Socket.IO version of /contact-requests/sent)
-  socket.on('get_sent_requests', () => {
-    db.all(
-      `SELECT cr.*, 
-              u.name as receiver_name, 
-              u.email as receiver_email, 
-              u.profile_image as receiver_image,
-              datetime(cr.created_at) as formatted_created_at
-       FROM contact_requests cr
-       JOIN users u ON cr.receiver_id = u.id
-       WHERE cr.sender_id = ?
-       ORDER BY cr.created_at DESC`,
-      [userId],
-      (err, rows) => {
-        if (err) {
-          console.error('Database error fetching sent contact requests for get_sent_requests:', err);
-          socket.emit('sent_requests', { error: 'Database error', sentRequests: [] });
-        } else {
-          socket.emit('sent_requests', { sentRequests: rows });
-        }
-      }
-    );
-  });
-  // Handle get_contact_requests (Socket.IO version of /contact-requests)
-  socket.on('get_contact_requests', () => {
-    const status = 'pending';
-    
-    db.all(
-      `SELECT cr.*, 
-              u.name as sender_name, 
-              u.email as sender_email, 
-              u.profile_image as sender_image,
-              datetime(cr.created_at) as formatted_created_at
-       FROM contact_requests cr
-       JOIN users u ON cr.sender_id = u.id
-       WHERE cr.receiver_id = ? AND cr.status = ?
-       ORDER BY cr.created_at DESC`,
-      [userId, status],
-      (err, rows) => {
-        if (err) {
-          console.error('Database error fetching contact requests for get_contact_requests:', err);
-          socket.emit('contact_requests', { error: 'Database error', contactRequests: [] });
-        } else {
-          const requests = rows.map(row => ({
-            ...row,
-            created_at: row.formatted_created_at ? row.formatted_created_at + 'Z' : row.created_at
-          }));
-          socket.emit('contact_requests', { contactRequests: requests });
-        }
-      }
-    );
-  });
-
-  // Handle get_blocked_users (Socket.IO version of /blocked-users)
-  socket.on('get_blocked_users', () => {
-    db.all(
-      `SELECT u.id, u.name, u.email, u.profile_image, u.userType, b.blocked_at
-       FROM blocked_users b
-       JOIN users u ON b.blocked_user_id = u.id
-       WHERE b.user_id = ?
-       ORDER BY b.blocked_at DESC`,
-      [userId],
-      (err, rows) => {
-        if (err) {
-          console.error('Error fetching blocked users:', err);
-          socket.emit('blocked_users', { error: 'Database error', blockedUsers: [] });
-        } else {
-          socket.emit('blocked_users', { blockedUsers: rows || [] });
-        }
-      }
-    );
-  });
-
-  // Handle get_last_messages
-  socket.on('get_last_messages', (contactIds) => {
-    if (!contactIds || !Array.isArray(contactIds) || contactIds.length === 0) {
-      socket.emit('last_messages', { lastMessages: {}, unreadCounts: {} });
-      return;
-    }
-
-    const placeholders = contactIds.map(() => '?').join(',');
-    
-    db.all(
-      `SELECT DISTINCT 
-         CASE WHEN sender_id = ? THEN receiver_id ELSE sender_id END as contact_id,
-         message, timestamp, sender_id, receiver_id
-       FROM messages
-       WHERE (sender_id = ? OR receiver_id = ?)
-         AND (sender_id IN (${placeholders}) OR receiver_id IN (${placeholders}))
-         AND deleted = 0
-       ORDER BY timestamp DESC`,
-      [userId, userId, userId, ...contactIds, ...contactIds],
-      (err, rows) => {
-        if (err) {
-          console.error('Error fetching last messages:', err);
-          socket.emit('last_messages', { lastMessages: {}, unreadCounts: {} });
-          return;
-        }
-
-        const lastMessages = {};
-        const seen = new Set();
-        
-        rows.forEach(row => {
-          const contactId = row.contact_id;
-          if (!seen.has(contactId)) {
-            lastMessages[contactId] = row;
-            seen.add(contactId);
-          }
-        });
-
-        db.all(
-          `SELECT sender_id, COUNT(*) as count
-           FROM messages
-           WHERE receiver_id = ? AND read = 0 AND sender_id IN (${placeholders}) AND deleted = 0
-           GROUP BY sender_id`,
-          [userId, ...contactIds],
-          (err, unreadRows) => {
-            if (err) {
-              console.error('Error fetching unread counts:', err);
-              socket.emit('last_messages', { lastMessages, unreadCounts: {} });
-              return;
-            }
-
-            const unreadCounts = {};
-            unreadRows.forEach(row => {
-              unreadCounts[row.sender_id] = row.count;
-            });
-
-            socket.emit('last_messages', { lastMessages, unreadCounts });
-          }
-        );
-      }
-    );
-  });
-
-  // Handle new message
   socket.on('send_message', async (data) => {
     const { receiver_id, message } = data;
     
-    // Check if either user has blocked the other
     db.get(
       `SELECT 1 FROM blocked_users 
        WHERE (user_id = ? AND blocked_user_id = ?) 
@@ -1951,7 +1719,7 @@ io.on('connection', (socket) => {
       [userId, receiver_id, receiver_id, userId],
       (err, blockedRow) => {
         if (err) {
-          console.error('Error checking block status:', err);
+          console.error('❌ Error checking block status:', err);
           socket.emit('message_error', { error: 'Failed to send message' });
           return;
         }
@@ -1961,23 +1729,21 @@ io.on('connection', (socket) => {
           return;
         }
         
-        // Save message to database
         db.run(
           `INSERT INTO messages (sender_id, receiver_id, message) VALUES (?, ?, ?)`,
           [userId, receiver_id, message],
           function(err) {
             if (err) {
-              console.error('Error saving message:', err);
+              console.error('❌ Error saving message:', err);
               socket.emit('message_error', { error: 'Failed to send message' });
               return;
             }
 
             const messageId = this.lastID;
         
-            // Get sender info
             db.get('SELECT name, profile_image FROM users WHERE id = ?', [userId], (err, sender) => {
               if (err) {
-                console.error('Error fetching sender:', err);
+                console.error('❌ Error fetching sender:', err);
                 return;
               }
 
@@ -1992,16 +1758,13 @@ io.on('connection', (socket) => {
                 sender_image: sender.profile_image
               };
 
-              // Send to sender for confirmation
               socket.emit('message_sent', messageData);
 
-              // Send to receiver if online
               const receiverSocketId = onlineUsers.get(receiver_id);
               if (receiverSocketId) {
                 io.to(receiverSocketId).emit('new_message', messageData);
               }
 
-              // Notify about new message in contacts list
               io.to(`user_${receiver_id}`).emit('message_notification', {
                 senderId: userId,
                 message: message,
@@ -2014,7 +1777,6 @@ io.on('connection', (socket) => {
     );
   });
 
-  // Handle message edit
   socket.on('edit_message', async (data) => {
     const { messageId, newMessage } = data;
     
@@ -2023,12 +1785,11 @@ io.on('connection', (socket) => {
       [newMessage, messageId, userId],
       function(err) {
         if (err) {
-          console.error('Error editing message:', err);
+          console.error('❌ Error editing message:', err);
           socket.emit('edit_error', { error: 'Failed to edit message' });
           return;
         }
 
-        // Get the message receiver to notify them
         db.get('SELECT receiver_id FROM messages WHERE id = ?', [messageId], (err, row) => {
           if (err || !row) return;
 
@@ -2038,7 +1799,6 @@ io.on('connection', (socket) => {
             edited: 1
           };
 
-          // Notify both sender and receiver
           socket.emit('message_edited', updateData);
           const receiverSocketId = onlineUsers.get(row.receiver_id);
           if (receiverSocketId) {
@@ -2049,7 +1809,6 @@ io.on('connection', (socket) => {
     );
   });
 
-  // Handle message delete
   socket.on('delete_message', async (data) => {
     const { messageId } = data;
     
@@ -2058,18 +1817,16 @@ io.on('connection', (socket) => {
       [messageId, userId],
       function(err) {
         if (err) {
-          console.error('Error deleting message:', err);
+          console.error('❌ Error deleting message:', err);
           socket.emit('delete_error', { error: 'Failed to delete message' });
           return;
         }
 
-        // Get the message receiver to notify them
         db.get('SELECT receiver_id FROM messages WHERE id = ?', [messageId], (err, row) => {
           if (err || !row) return;
 
           const deleteData = { messageId };
 
-          // Notify both sender and receiver
           socket.emit('message_deleted', deleteData);
           const receiverSocketId = onlineUsers.get(row.receiver_id);
           if (receiverSocketId) {
@@ -2080,7 +1837,6 @@ io.on('connection', (socket) => {
     );
   });
 
-  // Handle mark as read
   socket.on('mark_read', async (data) => {
     const { senderId } = data;
     
@@ -2089,11 +1845,10 @@ io.on('connection', (socket) => {
       [senderId, userId],
       function(err) {
         if (err) {
-          console.error('Error marking messages as read:', err);
+          console.error('❌ Error marking messages as read:', err);
           return;
         }
 
-        // Notify sender that their messages were read
         const senderSocketId = onlineUsers.get(senderId);
         if (senderSocketId) {
           io.to(senderSocketId).emit('messages_read', { readBy: userId });
@@ -2102,7 +1857,38 @@ io.on('connection', (socket) => {
     );
   });
 
-  // Handle typing indicator
+  // ==================== CONTACT REQUEST HANDLERS ====================
+
+  socket.on('contact_request_sent', (data) => {
+    const { receiverId, requestId } = data;
+    const receiverSocketId = onlineUsers.get(receiverId);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit('new_contact_request', {
+        senderId: userId,
+        requestId,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  socket.on('contact_request_accepted', (data) => {
+    const { senderId } = data;
+    const senderSocketId = onlineUsers.get(senderId);
+    if (senderSocketId) {
+      io.to(senderSocketId).emit('contact_request_approved', {
+        approvedBy: userId,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  socket.on('contact_request_declined', (data) => {
+    const { requestId } = data;
+    socket.emit('contact_request_declined_confirmed', { requestId });
+  });
+
+  // ==================== TYPING INDICATORS ====================
+
   socket.on('typing_start', (data) => {
     const { receiverId } = data;
     const receiverSocketId = onlineUsers.get(receiverId);
@@ -2119,123 +1905,11 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Handle contact request
-  socket.on('contact_request_sent', (data) => {
-    const { receiverId, requestId } = data;
-    const receiverSocketId = onlineUsers.get(receiverId);
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit('new_contact_request', {
-        senderId: userId,
-        requestId,
-        timestamp: new Date().toISOString()
-      });
-    }
-  });
+  // ==================== DISCONNECT ====================
 
-  // Handle contact request accepted
-  socket.on('contact_request_accepted', (data) => {
-    const { senderId } = data;
-    const senderSocketId = onlineUsers.get(senderId);
-    if (senderSocketId) {
-      io.to(senderSocketId).emit('contact_request_approved', {
-        approvedBy: userId,
-        timestamp: new Date().toISOString()
-      });
-    }
-  });
-
-  // Handle contact request declined
-  socket.on('contact_request_declined', (data) => {
-    const { requestId } = data;
-    socket.emit('contact_request_declined_confirmed', { requestId });
-  });
-
-  // Handle waiting message removal
-  socket.on('remove_waiting_message', (data) => {
-    const { userId: targetUserId } = data;
-    socket.emit('waiting_message_removed', { userId: targetUserId });
-  });
-
-  // Handle block user
-socket.on('block_user', async (data) => {
-  const { blockedUserId } = data;
-  
-  try {
-    await new Promise((resolve, reject) => {
-      db.run(
-        'INSERT INTO blocked_users (user_id, blocked_user_id) VALUES (?, ?)',
-        [userId, blockedUserId],
-        function(err) {
-          if (err) reject(err);
-          else resolve(this.lastID);
-        }
-      );
-    });
-
-    const blockedUser = await new Promise((resolve, reject) => {
-      db.get('SELECT id, name, email, profile_image FROM users WHERE id = ?', [blockedUserId], (err, row) => {
-        if (err) reject(err);
-        else resolve(row);
-      });
-    });
-
-    // Notify the blocker (current user)
-    socket.emit('user_blocked', { 
-      blockedUser,
-      message: 'User blocked successfully'
-    });
-
-    // Notify the blocked user that they were blocked
-    const blockedUserSocketId = onlineUsers.get(blockedUserId);
-    if (blockedUserSocketId) {
-      io.to(blockedUserSocketId).emit('you_were_blocked', {
-        blockedBy: userId,
-        timestamp: new Date().toISOString()
-      });
-      console.log(`✅ Notified User ${blockedUserId} that they were blocked by User ${userId}`);
-    }
-
-    console.log(`🚫 User ${userId} blocked user ${blockedUserId}`);
-  } catch (error) {
-    console.error('Error blocking user:', error);
-    socket.emit('block_error', { error: 'Failed to block user' });
-  }
-});
-
-  // Handle unblock user
-  socket.on('unblock_user', async (data) => {
-    const { blockedUserId } = data;
-    
-    try {
-      await new Promise((resolve, reject) => {
-        db.run(
-          'DELETE FROM blocked_users WHERE user_id = ? AND blocked_user_id = ?',
-          [userId, blockedUserId],
-          function(err) {
-            if (err) reject(err);
-            else resolve();
-          }
-        );
-      });
-
-      socket.emit('user_unblocked', { 
-        blockedUserId,
-        message: 'User unblocked successfully'
-      });
-
-      console.log(`✅ User ${userId} unblocked user ${blockedUserId}`);
-    } catch (error) {
-      console.error('Error unblocking user:', error);
-      socket.emit('unblock_error', { error: 'Failed to unblock user' });
-    }
-  });
-
-  // Handle disconnect
   socket.on('disconnect', () => {
     console.log(`❌ User disconnected: ${userId} (Socket ID: ${socket.id})`);
     onlineUsers.delete(userId);
-    
-    // Broadcast offline status to all users
     io.emit('user_offline', { userId });
   });
 });
@@ -2253,7 +1927,7 @@ if (process.env.NODE_ENV === 'production') {
 // ==================== START SERVER ====================
 httpServer.listen(3001, () => {
   console.log('🚀 Server running on port 3001');
-  console.log('🔒 JWT Authentication enabled');
+  console.log('🔐 JWT Authentication enabled');
   console.log('📁 File upload enabled');
   console.log('💬 Chat system enabled');
   console.log('⚡ Socket.IO real-time messaging enabled');
